@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="author" content="Gabriel Pitter">
+<title>Disponibilidade da Frota 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout: cabeçalho LOC (navy→fundo), faixa de KPIs, gráfico de linha em painel com cantoneiras, tabela mensal abaixo */
+:root{
+  --bg:#0B0E14;--panel:#111827;--panel2:#161F33;--line:#243049;--grid:#1E2840;--navy:#1F3864;--navy2:#2B4A80;
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,.14);--text:#E6EAF2;--text2:#B7C0D1;--muted:#8A96AD;
+  --red:#F2545B;--green:#3CCB8B;--hdr-end:#0B0E14;--serie:#4C9BFF;
+  --sans:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#F3F5F9;--panel:#FFFFFF;--panel2:#EEF2F8;--line:#C9D2E0;--grid:#E2E7EF;--navy:#1F3864;--navy2:#2B4A80;
+  --amber:#B86E00;--amber-dim:rgba(184,110,0,.12);--text:#1A2233;--text2:#3A4558;--muted:#667287;
+  --red:#C2303A;--green:#17834F;--hdr-end:#F3F5F9;--serie:#1D5FD6;color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#F3F5F9;--panel:#FFFFFF;--panel2:#EEF2F8;--line:#C9D2E0;--grid:#E2E7EF;--navy:#1F3864;--navy2:#2B4A80;
+  --amber:#B86E00;--amber-dim:rgba(184,110,0,.12);--text:#1A2233;--text2:#3A4558;--muted:#667287;
+  --red:#C2303A;--green:#17834F;--hdr-end:#F3F5F9;--serie:#1D5FD6;color-scheme:light}
+html,body{background:var(--bg)}
+body{color:var(--text);font-family:var(--sans);font-size:14px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  border-bottom:1px solid var(--line);background:linear-gradient(90deg,var(--navy) 0%,var(--hdr-end) 70%)}
+.brand{font-weight:700;letter-spacing:.08em;font-size:18px;color:#fff}
+.brand b{color:#F5A623}
+header h1{font-size:15px;font-weight:500;margin:0;color:var(--muted)}
+.src{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{background:var(--navy);border:1px solid var(--navy2);color:#E6EAF2;padding:7px 12px;font-family:var(--mono);font-size:12px;border-radius:2px;text-decoration:none;display:inline-flex;align-items:center;height:32px;box-sizing:border-box}
+.btn:hover,.btn:focus-visible{border-color:var(--amber);outline:none}
+main{display:grid;gap:16px;padding-block:18px 8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1200px;margin:0 auto}
+.bracket{position:relative;background:var(--panel);border:1px solid var(--line);padding:14px;min-width:0}
+.bracket::before,.bracket::after{content:"";position:absolute;width:10px;height:10px;border-color:var(--amber);border-style:solid}
+.bracket::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.bracket::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi .l{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpi .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+.up{color:var(--green)}.dn{color:var(--red)}.am{color:var(--amber)}
+.ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.ph h2{margin:0;font-size:15px;font-weight:500;text-wrap:balance}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--text2)}
+.leg i{display:inline-block;width:18px;height:0;vertical-align:middle;margin-right:6px;border-top:2px solid var(--serie)}
+.leg i.meta{border-top:2px dashed var(--green)}
+.leg i.parc{border-top:2px dashed var(--serie)}
+.chartwrap{position:relative;overflow-x:auto}
+svg{display:block;width:100%;min-width:560px;height:auto}
+svg text{font-family:var(--mono);fill:var(--muted);font-size:11px}
+svg .vl{fill:var(--text);font-size:12px;font-weight:600}
+svg .vl.parc{fill:var(--serie)}
+svg .ml{fill:var(--green);font-size:11px}
+svg .hit{fill:transparent;cursor:pointer}
+#tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--amber);padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.6;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:5}
+#tip b{color:var(--amber);font-size:12px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;min-width:620px}
+th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:right;padding:8px 10px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--grid);color:var(--text2)}
+td.vv{color:var(--text);font-weight:600}
+tr.parc td{color:var(--amber)}
+.pill{display:inline-block;padding:1px 7px;border:1px solid currentColor;border-radius:999px;font-size:10px}
+.note{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6;margin:10px 0 0}
+.note b{color:var(--text2);font-weight:500}
+footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;padding-block:18px 22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:520px){.src{margin-left:0}.kpi .v{font-size:20px}}
+</style>
+</head>
+<body style="margin:0">
+
+<header>
+  <div class="brand">LOC <b>FROTAS</b></div>
+  <h1>Disponibilidade da Frota · Média mensal 2026</h1>
+  <div class="src"><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/">← Central</a></div>
+</header>
+
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <section class="bracket">
+    <div class="ph">
+      <h2>Disponibilidade média por mês</h2>
+      <div class="leg"><span><i></i>Média do mês</span><span><i class="parc"></i>Outubro (parcial)</span><span><i class="meta"></i>Meta 97%</span></div>
+    </div>
+    <div class="chartwrap" id="cw"><svg id="ch" viewBox="0 0 1000 380" role="img" aria-label="Gráfico de linha da disponibilidade média mensal de janeiro a outubro de 2026"></svg><div id="tip" hidden></div></div>
+  </section>
+
+  <section class="bracket">
+    <div class="ph"><h2>Detalhe mensal</h2></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Mês</th><th>Disponibilidade</th><th>vs. mês ant.</th><th>vs. meta</th><th>Pior dia</th><th>Melhor dia</th><th>Frota média</th><th>Parados/dia</th><th>Dias</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+    <p class="note"><b>Cálculo:</b> média simples dos percentuais diários do mês, com disponibilidade do dia = 1 − (veículos parados ÷ frota). <b>Outubro</b> usa o valor atual informado (96,5%), mês ainda em andamento.<br>
+    <b>Setembro:</b> a coluna “%” da aba Set 2026 está digitada e não bate com as contagens da própria aba (média 96,8%). Aqui o valor foi recalculado pelas contagens: 96,6%, mesmo critério dos outros meses.</p>
+  </section>
+</main>
+
+<footer>© 2026 Gabriel Pitter · Desenvolvido para uso interno da LOC Frotas · Todos os direitos reservados</footer>
+
+<script>
+const D=[{"m":"Jan","v":95.79,"mn":95.13,"mx":96.66,"fr":2202,"pa":92.7,"d":29},{"m":"Fev","v":95.56,"mn":95.2,"mx":96.32,"fr":2179,"pa":96.8,"d":28},{"m":"Mar","v":95.77,"mn":95.25,"mx":96.41,"fr":2189,"pa":92.6,"d":31},{"m":"Abr","v":96.15,"mn":95.32,"mx":97.02,"fr":2250,"pa":86.6,"d":30},{"m":"Mai","v":95.89,"mn":95.06,"mx":96.43,"fr":2273,"pa":93.3,"d":30},{"m":"Jun","v":96.26,"mn":95.4,"mx":96.77,"fr":2263,"pa":84.7,"d":30},{"m":"Jul","v":96.39,"mn":95.74,"mx":96.75,"fr":2274,"pa":82.0,"d":31},{"m":"Ago","v":96.35,"mn":95.83,"mx":96.77,"fr":2262,"pa":82.5,"d":31},{"m":"Set","v":96.55,"mn":95.38,"mx":97.0,"fr":2256,"pa":77.9,"d":30},{"m":"Out","v":96.5,"parc":true}];
+const META=97, NOMES={Jan:"Janeiro",Fev:"Fevereiro",Mar:"Março",Abr:"Abril",Mai:"Maio",Jun:"Junho",Jul:"Julho",Ago:"Agosto",Set:"Setembro",Out:"Outubro"};
+const r1=x=>Math.round(x*10+(x>=0?1e-9:-1e-9))/10, f2=x=>r1(x).toFixed(1).replace('.',','), f1=x=>x.toFixed(1).replace('.',','), fi=x=>x.toLocaleString('pt-BR');
+const pp=x=>{x=r1(x);return (x>0?'+':x<0?'−':'±')+f2(Math.abs(x))+' p.p.'};
+const YTD_RAW=D.reduce((s,d)=>s+d.v,0)/D.length;
+D.forEach(d=>{d.v=r1(d.v);if(d.mn!=null){d.mn=r1(d.mn);d.mx=r1(d.mx)}});
+
+// KPIs
+const fech=D.filter(d=>!d.parc), ytd=YTD_RAW;
+const best=fech.reduce((a,b)=>b.v>a.v?b:a), worst=fech.reduce((a,b)=>b.v<a.v?b:a);
+const out=D[D.length-1], set=D[D.length-2], gap=META-ytd;
+document.getElementById('kpis').innerHTML=[
+  ['Média 2026 (jan–out)',f2(ytd)+'%',`<span class="dn">${pp(-gap)}</span> da meta de 97%`],
+  ['Outubro (parcial)',f2(out.v)+'%',`<span class="${out.v>=set.v?'up':'dn'}">${pp(out.v-set.v)}</span> vs. setembro`],
+  ['Melhor mês fechado',f2(best.v)+'%',NOMES[best.m]],
+  ['Pior mês fechado',f2(worst.v)+'%',NOMES[worst.m]],
+  ['Evolução jan → set',pp(set.v-D[0].v),`${f2(D[0].v)}% → ${f2(set.v)}%`]
+].map(([l,v,s])=>`<div class="bracket kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+
+// Gráfico
+const W=1000,H=380,L=56,R=24,T=34,B=44, Y0=95,Y1=97.5;
+const x=i=>L+(W-L-R)*(i+.5)/D.length, y=v=>T+(H-T-B)*(Y1-v)/(Y1-Y0);
+let s='';
+for(let v=Y0;v<=Y1+1e-9;v+=.5){s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${f1(v)}%</text>`}
+s+=`<line x1="${L}" x2="${W-R}" y1="${y(META)}" y2="${y(META)}" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="6 5"/><text class="ml" x="${W-R}" y="${y(META)-7}" text-anchor="end">Meta 97%</text>`;
+const pts=fech.map((d,i)=>[x(i),y(d.v)]);
+s+=`<defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--serie)" stop-opacity=".28"/><stop offset="1" stop-color="var(--serie)" stop-opacity="0"/></linearGradient></defs>`;
+s+=`<path d="M${pts[0][0]},${H-B} L${pts.map(p=>p.join(',')).join(' L')} L${pts[pts.length-1][0]},${H-B} Z" fill="url(#ga)"/>`;
+s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--serie)" stroke-width="2.5" stroke-linejoin="round"/>`;
+const io=D.length-1;
+s+=`<line x1="${pts[pts.length-1][0]}" y1="${pts[pts.length-1][1]}" x2="${x(io)}" y2="${y(out.v)}" stroke="var(--serie)" stroke-width="2.5" stroke-dasharray="5 5"/>`;
+D.forEach((d,i)=>{
+  const cx=x(i),cy=y(d.v);
+  s+=d.parc?`<circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--panel)" stroke="var(--serie)" stroke-width="2.5"/>`
+           :`<circle cx="${cx}" cy="${cy}" r="${d===best||d===worst?6:4.5}" fill="var(--serie)" stroke="var(--panel)" stroke-width="2"/>`;
+  s+=`<text class="vl${d.parc?' parc':''}" x="${cx}" y="${cy-13}" text-anchor="middle">${f2(d.v)}%</text>`;
+  s+=`<text x="${cx}" y="${H-B+20}" text-anchor="middle">${d.m}${d.parc?'*':''}</text>`;
+  s+=`<rect class="hit" data-i="${i}" x="${cx-(W-L-R)/D.length/2}" y="${T}" width="${(W-L-R)/D.length}" height="${H-T-B}" fill="transparent"/>`;
+});
+s+=`<text x="${x(io)}" y="${H-B+34}" text-anchor="middle" style="font-size:10px">*parcial</text>`;
+const svg=document.getElementById('ch'); svg.innerHTML=s;
+
+const tip=document.getElementById('tip'), cw=document.getElementById('cw');
+function show(i,evt){
+  const d=D[i]; const prev=i?D[i-1]:null;
+  tip.innerHTML=`<b>${NOMES[d.m]} 2026${d.parc?' · parcial':''}</b><br>Disponibilidade: ${f2(d.v)}%`+
+    (prev?`<br>vs. mês anterior: ${pp(d.v-prev.v)}`:'')+`<br>vs. meta: ${pp(d.v-META)}`+
+    (d.parc?`<br>Valor atual informado`:`<br>Pior / melhor dia: ${f2(d.mn)}% / ${f2(d.mx)}%<br>Frota média: ${fi(d.fr)} · Parados/dia: ${f1(d.pa)}<br>Dias apurados: ${d.d}`);
+  tip.hidden=false;
+  const r=cw.getBoundingClientRect(), sr=svg.getBoundingClientRect(), k=sr.width/W;
+  let left=sr.left-r.left+cw.scrollLeft+x(i)*k+14, top=sr.top-r.top+y(d.v)*k-10;
+  if(left+tip.offsetWidth>cw.scrollLeft+r.width-4) left=sr.left-r.left+cw.scrollLeft+x(i)*k-tip.offsetWidth-14;
+  tip.style.left=left+'px'; tip.style.top=Math.max(0,top)+'px';
+}
+svg.querySelectorAll('.hit').forEach(h=>{
+  h.addEventListener('mouseenter',e=>show(+h.dataset.i,e));
+  h.addEventListener('click',e=>show(+h.dataset.i,e));
+  h.addEventListener('mouseleave',()=>tip.hidden=true);
+});
+
+// Tabela
+document.getElementById('tb').innerHTML=D.map((d,i)=>{
+  const dv=i?d.v-D[i-1].v:null, dm=d.v-META;
+  return `<tr class="${d.parc?'parc':''}"><td>${NOMES[d.m]}${d.parc?' <span class="pill">parcial</span>':''}</td><td class="vv">${f2(d.v)}%</td>`+
+    `<td class="${dv==null||r1(dv)===0?'':dv>0?'up':'dn'}">${dv==null?'—':pp(dv)}</td><td class="${dm>=0?'up':'dn'}">${pp(dm)}</td>`+
+    (d.parc?`<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>`:`<td>${f2(d.mn)}%</td><td>${f2(d.mx)}%</td><td>${fi(d.fr)}</td><td>${f1(d.pa)}</td><td>${d.d}</td>`)+`</tr>`;
+}).join('');
+</script>
+
+</body>
+</html>
