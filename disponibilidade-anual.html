@@ -135,10 +135,19 @@ for(let v=Y0;v<=Y1+1e-9;v+=.5){s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="
 s+=`<line x1="${L}" x2="${W-R}" y1="${y(META)}" y2="${y(META)}" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="6 5"/><text class="ml" x="${W-R}" y="${y(META)-7}" text-anchor="end">Meta 97%</text>`;
 const pts=fech.map((d,i)=>[x(i),y(d.v)]);
 s+=`<defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--serie)" stop-opacity=".28"/><stop offset="1" stop-color="var(--serie)" stop-opacity="0"/></linearGradient></defs>`;
-s+=`<path d="M${pts[0][0]},${H-B} L${pts.map(p=>p.join(',')).join(' L')} L${pts[pts.length-1][0]},${H-B} Z" fill="url(#ga)"/>`;
-s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--serie)" stroke-width="2.5" stroke-linejoin="round"/>`;
+// curva suave monotônica (não inventa picos/vales entre os meses)
+const all=D.map((d,i)=>[x(i),y(d.v)]);
+const segs=(()=>{const n=all.length,dx=[],m=[],t=[];
+  for(let i=0;i<n-1;i++){dx[i]=all[i+1][0]-all[i][0];m[i]=(all[i+1][1]-all[i][1])/dx[i]}
+  t[0]=m[0];t[n-1]=m[n-2];
+  for(let i=1;i<n-1;i++){t[i]=(m[i-1]*m[i]<=0)?0:(m[i-1]+m[i])/2}
+  for(let i=0;i<n-1;i++){if(m[i]===0){t[i]=t[i+1]=0;continue}const a=t[i]/m[i],b=t[i+1]/m[i],h=a*a+b*b;if(h>9){const k=3/Math.sqrt(h);t[i]=k*a*m[i];t[i+1]=k*b*m[i]}}
+  return all.slice(0,-1).map((p,i)=>{const q=all[i+1],h=dx[i]/3;return `C${p[0]+h},${p[1]+t[i]*h} ${q[0]-h},${q[1]-t[i+1]*h} ${q[0]},${q[1]}`})})();
+const nF=pts.length, solid=`M${all[0][0]},${all[0][1]} `+segs.slice(0,nF-1).join(' ');
+s+=`<path d="M${all[0][0]},${H-B} L${all[0][0]},${all[0][1]} ${segs.slice(0,nF-1).join(' ')} L${all[nF-1][0]},${H-B} Z" fill="url(#ga)"/>`;
+s+=`<path d="${solid}" fill="none" stroke="var(--serie)" stroke-width="2.5" stroke-linecap="round"/>`;
 const io=D.length-1;
-s+=`<line x1="${pts[pts.length-1][0]}" y1="${pts[pts.length-1][1]}" x2="${x(io)}" y2="${y(out.v)}" stroke="var(--serie)" stroke-width="2.5" stroke-dasharray="5 5"/>`;
+s+=`<path d="M${all[nF-1][0]},${all[nF-1][1]} ${segs.slice(nF-1).join(' ')}" fill="none" stroke="var(--serie)" stroke-width="2.5" stroke-dasharray="5 5"/>`;
 D.forEach((d,i)=>{
   const cx=x(i),cy=y(d.v);
   s+=d.parc?`<circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--panel)" stroke="var(--serie)" stroke-width="2.5"/>`
