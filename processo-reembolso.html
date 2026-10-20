@@ -353,7 +353,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
     <section data-p="pg" hidden><div class="pgsum" id="pgSum"></div><div class="tbar"><span id="cntPg"></span><span class="note">Uma linha por parcela de pagamento. Situação: Q = quitado, A = em aberto. Atraso contado a partir do vencimento até hoje.</span><div class="sp"><button class="btn amber" data-csv="pg">Exportar CSV</button></div></div><div class="vt" id="vtPg"></div></section>
     <section data-p="an" hidden><div class="tbar"><span id="cntAn"></span><span class="note">Quantidade de OS por etapa e reembolso ainda não faturado de cada analista (quem abriu a OS).</span><div class="sp"><button class="btn amber" data-csv="an">Exportar CSV</button></div></div><div class="vt sm" id="vtAn"></div></section>
     <section data-p="cli" hidden><div class="tbar"><span id="cntCli"></span><span class="note">Reembolso a faturar por cliente. Idade = dias desde a entrada da OS.</span><div class="sp"><button class="btn amber" data-csv="cli">Exportar CSV</button></div></div><div class="vt" id="vtCli"></div></section>
-    <section data-p="lin" hidden><div class="tbar"><span id="cntLin"></span><span class="note">O relatório como veio, uma linha por parcela. Atenção: valores da OS e da OC se repetem aqui; não some essas colunas.</span><div class="sp"><button class="btn amber" data-csv="lin">Exportar CSV</button></div></div><div class="vt" id="vtLin"></div></section>
+    <section data-p="lin" hidden><div class="tbar"><span id="cntLin"></span><span class="note">As linhas do relatório das OS que ficaram na página (com pendência ou parcela em aberto), uma por parcela. Atenção: valores da OS e da OC se repetem aqui; não some essas colunas.</span><div class="sp"><button class="btn amber" data-csv="lin">Exportar CSV</button></div></div><div class="vt" id="vtLin"></div></section>
     <section data-p="ind" hidden><div style="height:12px"></div><div class="kpis" id="kpis"></div><div class="agew bracket" id="age"></div><div class="note">Os indicadores seguem os filtros do topo. Clicar numa faixa de idade ou numa etapa filtra também as outras abas.</div></section>
   </div>
 </main>
@@ -519,7 +519,7 @@ const clean=s=>s==null?null:String(s).replace(/\s+/g,' ').trim();
 const nil=v=>v==null||v===''||(typeof v==='string'&&/^\s*-?\s*$/.test(v));
 function toDay(v){if(nil(v))return null;if(v instanceof Date)return Math.floor(Date.UTC(v.getFullYear(),v.getMonth(),v.getDate())/864e5);
   if(typeof v==='number')return v>20000&&v<80000?Math.round(v-25569):null;
-  const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return Math.floor(Date.UTC(+m[3],+m[2]-1,+m[1])/864e5);
+  const m=String(v).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return +m[3]<2000?null:Math.floor(Date.UTC(+m[3],+m[2]-1,+m[1])/864e5);
   const t=Date.parse(v);return isNaN(t)?null:Math.floor(t/864e5)}
 function toNum(v){if(nil(v))return null;if(typeof v==='number')return v;let s=String(v).trim().replace(/R\$\s?/,'');if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?null:n}
 const toTxt=v=>nil(v)?null:clean(v);
@@ -567,17 +567,17 @@ function parseAoA(aoa){
     for(const [pgc,p] of s.pgs){np++;const w=wOf(pgc,s.os);if(w<1)shr++;const v=(p.valPG||0)*w;if(p.et===5){pago+=v;nq++}else{aberto+=v;if(p.vencPG!=null&&p.vencPG<HOJE)venc+=v;if(p.vencPG!=null&&(prox==null||p.vencPG<prox))prox=p.vencPG}}
     let valOC=0;for(const x of s.ocs.values())valOC+=x.v;
     return Object.assign(s,{shr,nOC:s.ocs.size,nNF:s.nfs.size,nPg:np,nPq:nq,pago,aberto,venc,prox,valOC,dias:s.entOS!=null?HOJE-s.entOS:null,
-      fornT:[...s.forn].join(' / '),ccT:[...s.cc].join(' / '),aFat:/^n/i.test(s.libFat||'')?s.valRe:0,
+      fornT:[...s.forn].join(' / '),ccT:[...s.cc].join(' / '),aFat:0,
       sch:nrmS([s.os,s.placa,s.cliente,...s.forn,...s.lines.map(l=>[l.oc,l.nf,l.docNF,l.pg,l.fornPG].join(' '))].join(' '))})});
   for(const s of OSL){const ab=/^abert/i.test(s.sitOS||''),re=s.lines[0].reemb!=null?/^s/i.test(s.lines[0].reemb):(s.valRe||0)>0,fat=/^s/i.test(s.libFat||'')||!!s.fat;
-    s.aberta=ab;s.re=re;s.cat=ab?(re?0:1):(re&&!fat?2:3);
+    s.aberta=ab;s.re=re;s.cat=ab?(re?0:1):(re&&!fat?2:3);s.aFat=re&&!fat?(s.valRe||0):0;
     const P=[];if(ab)P.push('OS aberta há '+fmtI.format(s.dias??0)+' dia(s)');
     if(s.et===0)P.push('sem OC');else if(s.et===1)P.push('OC em aprovação');else if(s.et===2)P.push('OC aprovada sem NF lançada');else if(s.et===3)P.push('NF sem pagamento lançado');
     if(s.venc>0)P.push('pagamento vencido '+fmtM.format(s.venc));
     if(!ab&&re&&!fat)P.push('liberar reembolso p/ faturamento');
     if(re&&!(s.valRe>0))P.push('valor de reembolso zerado');
     if(!(s.valOS>0))P.push('valor da OS zerado');
-    if(!s.cliente)P.push('sem cliente');
+    if(!s.cliente&&re)P.push('sem cliente');
     s.pend=P}
   const ds=LINES.map(l=>l.entOS).filter(x=>x!=null);
   META={n:LINES.length,os:OSL.length,dMin:Math.min(...ds),dMax:Math.max(...ds)};
@@ -615,22 +615,22 @@ function renderKpis(){
   const L=FOS,pl=new Set(L.map(s=>s.placa)).size;
   const k=(l,v,s,c)=>`<div class="bracket kpi"><div class="l">${l}</div><div class="v"${c?` style="color:${c}"`:''}>${v}</div><div class="s">${s||''}</div></div>`;
   const aF=sum(L,s=>s.aFat),vOS=sum(L,s=>s.valOS),pago=sum(L,s=>s.pago),ab=sum(L,s=>s.aberto),vc=sum(L,s=>s.venc);
-  const old=L.filter(s=>s.dias!=null&&s.dias>60);
-  const semNF=L.filter(s=>s.et<=2).length;
+  const PD=L.filter(s=>s.cat<3),old=PD.filter(s=>s.dias!=null&&s.dias>60);
+  const semNF=PD.filter(s=>s.et<=2).length;
   $('kpis').innerHTML=
-    k('OS no processo',fmtI.format(L.length),fmtI.format(pl)+' placas')+
+    k('OS pendentes',fmtI.format(PD.length),'abertas ou com reembolso não faturado'+(L.length>PD.length?' · +'+fmtI.format(L.length-PD.length)+' OS só com parcela em aberto':''))+
     k('Reembolso a faturar',short(aF),fmtM.format(aF)+' · não liberado para faturamento','var(--amber)')+
     k('Valor das OS',short(vOS),fmtM.format(vOS))+
     k('Pago ao fornecedor',short(pago),fmtM.format(pago))+
     k('A pagar ao fornecedor',short(ab),fmtM.format(ab))+
     k('Vencido sem pagar',short(vc),vc?fmtM.format(vc):'nenhuma parcela vencida',vc?'var(--red)':'')+
     k('OS sem nota fiscal',fmtI.format(semNF),'sem OC, OC em aprovação ou aguardando NF')+
-    k('OS com mais de 60 dias',fmtI.format(old.length),short(sum(old,s=>s.aFat))+' a faturar',old.length?'var(--red)':'');
+    k('OS pendentes há mais de 60 dias',fmtI.format(old.length),short(sum(old,s=>s.aFat))+' a faturar',old.length?'var(--red)':'');
   // idade
-  const tot=Math.max(1,FOSA.length);
-  $('age').innerHTML='<div class="agel">Idade das OS<br><span>dias desde a entrada · clique para filtrar</span></div>'+AGE.map((a,ix)=>{const g=FOSA.filter(s=>s.dias!=null&&s.dias>=a[0]&&s.dias<=a[1]);const v=sum(g,s=>s.aFat);
+  const FP=FOSA.filter(s=>s.cat<3),tot=Math.max(1,FP.length);
+  $('age').innerHTML='<div class="agel">Idade das OS pendentes<br><span>dias desde a entrada · clique para filtrar</span></div>'+AGE.map((a,ix)=>{const g=FP.filter(s=>s.dias!=null&&s.dias>=a[0]&&s.dias<=a[1]);const v=sum(g,s=>s.aFat);
     return `<button type="button" class="agec${F.age===ix?' on':''}${ix>=2?' hot':''}" data-ix="${ix}"><b>${a[2]}</b><span class="n">${fmtI.format(g.length)} OS</span><span class="m">${short(v)}</span><i style="width:${Math.max(2,g.length/tot*100)}%"></i></button>`}).join('')+
-    `<div class="etl">${ET.map((e,ix)=>{const n=FOSA.filter(s=>s.et===ix).length;return `<button type="button" class="etc${F.et===String(ix)?' on':''}" data-et="${ix}"><i style="background:${ETC[ix]}"></i>${e} <b>${fmtI.format(n)}</b></button>`}).join('')}</div>`;
+    `<div class="etl">${ET.map((e,ix)=>{const n=FP.filter(s=>s.et===ix).length;return `<button type="button" class="etc${F.et===String(ix)?' on':''}" data-et="${ix}"><i style="background:${ETC[ix]}"></i>${e} <b>${fmtI.format(n)}</b></button>`}).join('')}</div>`;
 }
 $('age').onclick=e=>{const b=e.target.closest('.agec');if(b){const ix=+b.dataset.ix;F.age=F.age===ix?-1:ix;render();return}
   const t=e.target.closest('.etc');if(t){$('fEt').value=$('fEt').value===t.dataset.et?'':t.dataset.et;render()}};
@@ -674,7 +674,7 @@ function tPend(){const P=pendOS(),A=new Map();
   if(selAn&&!G.some(g=>g.k===selAn))selAn='';
   const tc=[0,1,2].map(ix=>P.filter(s=>s.cat===ix).length);
   $('pCat').innerHTML=[0,1,2].map(ix=>`<button type="button" class="pcb${selCat.has(ix)?' on':''}" data-c="${ix}" style="--c:${CATC[ix]}"><span class="ck">${selCat.has(ix)?'✓':''}</span><span><b>${fmtI.format(tc[ix])}</b>${CAT[ix]}</span></button>`).join('')+
-    (tc[1]===0&&!LINES.some(l=>/^n/i.test(l.reemb||''))?'<div class="note pcn">Este relatório só traz OS reembolsáveis, por isso “abertas sem reembolso” fica zerado. Para ver essas OS, exporte o relatório sem o filtro de reembolsável.</div>':'');
+    (tc[1]===0&&!LINES.some(l=>/^n/i.test(l.reemb||''))?'<div class="note pcn">Este relatório só traz OS reembolsáveis, por isso “abertas sem reembolso” fica zerado. Para ver essas OS, exporte o relatório sem o filtro de reembolsável.</div>':'')+(RAW?`<div class="note pcn">Arquivo carregado: <b>${esc(RAW.name)}</b>${RAW.tot?' · '+fmtI.format(RAW.tot.os)+' OS no arquivo':''}</div>`:'');
   const tot=G.reduce((t,g)=>t+g.n,0);
   $('anGrid').innerHTML=`<button type="button" class="anc${selAn===''?' on':''}" data-a=""><div class="an-n">Todos os analistas</div><div class="an-t">${fmtI.format(tot)}</div><div class="an-s">${fmtI.format(G.length)} analista(s) com pendência</div></button>`+
     G.map(g=>`<button type="button" class="anc${selAn===g.k?' on':''}" data-a="${esc(g.k)}"><div class="an-n">${esc(g.k)}</div><div class="an-t">${fmtI.format(g.n)}<span>OS</span></div>
@@ -692,7 +692,7 @@ function tPend(){const P=pendOS(),A=new Map();
 function acoes(s){const A=[];
   if(s.et===0)A.push('lançar OC');else if(s.et===1)A.push('aprovar OC');else if(s.et===2)A.push('lançar NF');else if(s.et===3)A.push('lançar pagamento da NF');
   if(s.venc>0)A.push('pagamento vencido ('+fmtM.format(s.venc)+')');
-  if(!s.cliente)A.push('informar cliente');
+  if(!s.cliente&&s.re)A.push('informar cliente');
   if(s.re&&!(s.valRe>0))A.push('conferir valor de reembolso');
   if(!(s.valOS>0))A.push('conferir valor da OS');
   if(s.cat===2)A.push('liberar p/ faturamento');
@@ -769,14 +769,37 @@ async function saveBase(o){try{const d=await idb();d.transaction(ST,'readwrite')
 async function loadSaved(){try{const d=await idb();return await new Promise(ok=>{const q=d.transaction(ST).objectStore(ST).get('ultima');q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)})}catch(e){return null}}
 function use(o){RAW=o;parseAoA(o.aoa.map(r=>r.map(c=>c&&c.__d?new Date(c.__d):c)));buildFilters();
   $('empty').style.display='none';$('app').style.display='';
-  $('baseInfo').innerHTML=`Base: <b>${esc(o.name)}</b> · carregada em ${new Date(o.at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${fmtI.format(META.n)} linhas, ${fmtI.format(META.os)} OS · entradas de ${dStr(META.dMin)} a ${dStr(META.dMax)} · idades e atrasos contados até hoje (${dStr(HOJE)})`;
+  $('baseInfo').innerHTML=`Base: <b>${esc(o.name)}</b> · carregada em ${new Date(o.at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${o.tot?fmtI.format(o.tot.os)+' OS no arquivo, '+fmtI.format(META.os)+' com pendência ou parcela em aberto':fmtI.format(META.n)+' linhas, '+fmtI.format(META.os)+' OS'} · entradas de ${dStr(META.dMin)} a ${dStr(META.dMax)} · idades e atrasos contados até hoje (${dStr(HOJE)})`;
   paintUpd();render()}
+// leitura em segundo plano (Web Worker): o relatório completo pode ter centenas de milhares de linhas.
+// Ficam só as OS com pendência (abertas, ou reembolsáveis ainda não faturadas) e as que têm parcela em aberto.
+const XURL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+const WSRC=`self.onmessage=e=>{try{importScripts(e.data.url);post('Abrindo o Excel…');
+const wb=XLSX.read(e.data.buf,{type:'array',dense:true});const ws=wb.Sheets[wb.SheetNames[0]];post('Separando as OS pendentes…');
+const A=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+const k=v=>String(v==null?'':v).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const hi=A.findIndex(r=>r&&r.some(c=>k(c)==='codigoos'));if(hi<0)throw new Error('Não achei a coluna "Código - OS". Confira se é o relatório Processo - OS / OC / NF / Pagamentos.');
+const H=A[hi],ix={};H.forEach((h,j)=>ix[k(h)]=j);const g=(r,n)=>{const j=ix[n];return j==null?'':String(r[j]==null?'':r[j]).trim()};
+const nil=v=>v===''||v==='-';const keep=new Set();let os=new Set(),n=0;
+for(let i=hi+1;i<A.length;i++){const r=A[i];if(!r)continue;const o=g(r,'codigoos');if(nil(o))continue;n++;os.add(o);
+  const sit=g(r,'situacaoos'),re=g(r,'reembolsavelos'),lib=g(r,'liberadaparafaturamentoos'),fat=g(r,'numerofaturaos'),pg=g(r,'situacaopagamento');
+  if(/^abert/i.test(sit)||(/^s/i.test(re)&&!/^s/i.test(lib)&&nil(fat))||/^a$/i.test(pg))keep.add(o)}
+const rows=[];for(let i=hi+1;i<A.length;i++){const r=A[i];if(r&&keep.has(g(r,'codigoos')))rows.push(r)}
+self.postMessage({ok:1,aoa:[H].concat(rows),tot:{n,os:os.size}})}catch(err){self.postMessage({err:String(err&&err.message||err)})}};
+function post(m){self.postMessage({msg:m})}`;
+function parseInWorker(buf){return new Promise((ok,no)=>{let w;try{w=new Worker(URL.createObjectURL(new Blob([WSRC],{type:'text/javascript'})))}catch(e){no(e);return}
+  w.onmessage=e=>{const d=e.data;if(d.msg){busy(d.msg);return}w.terminate();if(d.err)no(new Error(d.err));else ok(d)};w.onerror=e=>{w.terminate();no(new Error(e.message||'falha ao ler'))};
+  w.postMessage({url:XURL,buf},[buf])})}
+function parseMain(buf){if(typeof XLSX==='undefined')throw new Error('O leitor de Excel não carregou. Verifique a internet e recarregue a página.');
+  let res=null;const self_={postMessage:x=>{if(!x.msg)res=x}};const fn=new Function('self','importScripts','post',WSRC.replace(/^self\.onmessage=e=>\{/,'return e=>{').replace(/function post\(m\)\{self\.postMessage\(\{msg:m\}\)\}$/,''));
+  fn(self_,()=>{},()=>{})({data:{buf}});if(!res)throw new Error('falha ao ler');if(res.err)throw new Error(res.err);return res}
+function busy(m){toast(`<b style="color:var(--amber)">⏳ ${esc(m)}</b><br>Arquivos grandes podem levar até 1 minuto. Pode continuar usando a página.`,600000)}
 async function readFile(f){if(!f)return;if(!/\.xlsx?$/i.test(f.name)){toast('<b style="color:var(--red)">Escolha um arquivo Excel (.xlsx)</b>');return}
-  try{if(typeof XLSX==='undefined')throw new Error('O leitor de Excel não carregou. Verifique a internet e recarregue a página.');
-    const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];
-    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
-    const o={name:f.name,at:Date.now(),mod:f.lastModified||null,aoa:aoa.map(r=>r.map(c=>c instanceof Date?{__d:c.getTime()}:c))};
-    use(o);saveBase(o);toast(`<b style="color:var(--green)">Base carregada</b><br>${fmtI.format(META.n)} linhas · ${fmtI.format(META.os)} OS`,4000)}
+  const t0=Date.now();busy('Lendo '+f.name+' ('+fmtN.format(f.size/1048576)+' MB)…');
+  try{let d;try{d=await parseInWorker(await f.arrayBuffer())}catch(we){if(/coluna|Código/.test(we.message||''))throw we;
+      busy('Lendo sem o modo em segundo plano (a tela pode congelar alguns segundos)…');await new Promise(r=>setTimeout(r,60));d=parseMain(await f.arrayBuffer())}
+    const o={name:f.name,at:Date.now(),mod:f.lastModified||null,tot:d.tot,aoa:d.aoa};
+    use(o);saveBase(o);toast(`<b style="color:var(--green)">Base carregada em ${Math.max(1,Math.round((Date.now()-t0)/1000))} s</b><br>${fmtI.format(d.tot.os)} OS no arquivo · ${fmtI.format(META.os)} com pendência ou parcela em aberto`,6000)}
   catch(e){toast('<b style="color:var(--red)">Não consegui ler o arquivo</b><br>'+esc(e.message||e),12000)}}
 $('btnLoad').onclick=()=>$('fileIn').click();$('fileIn').onchange=e=>{readFile(e.target.files[0]);e.target.value=''};
 ['dragover','dragenter'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('drag')}));
