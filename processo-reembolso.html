@@ -272,7 +272,8 @@ main{padding-top:14px}
 .emptyb{max-width:760px;margin:40px auto;text-align:center}.emptyb h2{font-size:18px;margin:4px 0 10px}.emptyb p{color:var(--text2);line-height:1.6}
 .dropz{margin-top:16px;border:2px dashed var(--line);padding:34px;font-family:var(--mono);font-size:13px;color:var(--muted);cursor:pointer}.dropz:hover,body.drag .dropz{border-color:var(--amber);color:var(--amber)}
 body.drag main{outline:2px dashed var(--amber);outline-offset:-6px}
-.pbar{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6}.pbar b{color:var(--text2);font-weight:500}
+.pbar{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}.pbar>span{min-width:0;flex:1}
+.anhd{display:flex;gap:12px;align-items:center;margin-bottom:8px}.angrid.hid{display:none}.pbar b{color:var(--text2);font-weight:500}
 .agew{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:14px}
 .agel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:150px;line-height:1.6}.agel span{text-transform:none;letter-spacing:0}
 .agec{position:relative;flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);color:var(--text);text-align:left;padding:8px 10px 12px;cursor:pointer;font-family:var(--mono);display:flex;flex-direction:column;gap:2px;overflow:hidden}
@@ -321,9 +322,9 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
     <div id="drop" class="dropz">Solte o arquivo .xlsx aqui</div>
   </div>
   <div id="app" style="display:none">
-    <div class="pbar"><span id="baseInfo"></span></div>
+    <div class="pbar"><span id="baseInfo"></span><div class="upd" id="upd" style="display:none"></div></div>
     <div class="filters bracket" id="fcard">
-      <div class="f wide"><label>Busca (OS, placa, OC, NF, cliente, fornecedor)</label><input id="q" placeholder="ex.: 145241, TCU3I50 ou rodobens" autocomplete="off"></div>
+      <div class="f wide keep"><label>Busca (OS, placa, OC, NF, cliente, fornecedor)</label><input id="q" placeholder="ex.: 145241, TCU3I50 ou rodobens" autocomplete="off"></div>
       <div class="f"><label>Etapa</label><select id="fEt"></select></div>
       <div class="f"><label>Analista (OS)</label><select id="fAn"></select></div>
       <div class="f"><label>Cliente</label><select id="fCli"></select></div>
@@ -332,7 +333,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
       <div class="f"><label>Competência da OS</label><select id="fComp"></select></div>
       <div class="f"><label>Entrada da OS de</label><input type="date" id="fDe"></div>
       <div class="f"><label>Entrada da OS até</label><input type="date" id="fAte"></div>
-      <div class="f" style="display:flex;gap:8px;align-items:center;grid-column:span 2"><button class="btn" id="clr">Limpar filtros</button><span id="nAct"></span></div>
+      <div class="f keep" style="display:flex;gap:8px;align-items:center;grid-column:span 2"><button class="btn" id="tgl">▲ Recolher filtros</button><button class="btn" id="clr">Limpar filtros</button><span id="nAct"></span></div>
     </div>
     <div class="tabsw"><div class="tabs" id="tabs">
       <div class="tab on" data-v="pend">Pendências por analista</div>
@@ -343,7 +344,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
       <div class="tab" data-v="lin">Linhas do relatório</div>
       <div class="tab" data-v="ind">Indicadores</div>
     </div></div>
-    <section data-p="pend"><div class="pcat" id="pCat"></div><div class="angrid" id="anGrid"></div>
+    <section data-p="pend"><div class="pcat" id="pCat"></div><div class="anhd"><button class="btn" id="tglAn">▲ Recolher analistas</button><span id="anSel" class="note"></span></div><div class="angrid" id="anGrid"></div>
       <div class="tbar"><span id="cntPend"></span><span class="note">Analista = quem abriu a OS. Clique num analista para ver só as OS dele e copiar a mensagem pronta.</span><div class="sp"><button class="btn amber" id="cpAn">Copiar mensagem</button><button class="btn" id="waAn" title="Abre o WhatsApp com a mensagem do analista escolhido; você só escolhe o contato">Abrir no WhatsApp</button><button class="btn" data-csv="pend">Exportar CSV</button></div></div>
       <div class="vt" id="vtPend"></div>
       <div class="rptw bracket"><div class="rpth"><b id="rptHd"></b><span class="note">Prévia do texto que vai ser copiado. Pode editar aqui antes de copiar.</span></div><textarea id="rptTx" spellcheck="false"></textarea></div>
@@ -705,12 +706,11 @@ const dot=d=>d==null?'⚪':d>60?'🔴':d>30?'🟡':'🟢';
 function rptTxt(list){const by=new Map();for(const s of list){const k=s.an||'(sem analista)';if(!by.has(k))by.set(k,[]);by.get(k).push(s)}
   const h=new Date().getHours(),sau=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';const out=[];
   for(const [an,L] of [...by.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'))){
-    const nome=an.split(' ')[0],c=[0,1,2].map(ix=>L.filter(s=>s.cat===ix).length),re=sum(L,s=>s.valRe),old=L.filter(s=>(s.dias||0)>60).length;
+    const nome=an.split(' ')[0],c=[0,1,2].map(ix=>L.filter(s=>s.cat===ix).length),re=sum(L,s=>s.valRe);
     const cnt=new Map();L.forEach(s=>acoes(s).forEach(a=>{const k=a.replace(/\s*\(.*\)$/,'');cnt.set(k,(cnt.get(k)||0)+1)}));
     out.push(`${sau}, ${nome}! 👋`,'',`Segue a lista de *OS pendentes de regularização* no sistema (posição de ${dStr(HOJE)}):`,'');
     out.push(`📋 *Resumo: ${L.length} OS* · ${fmtM.format(re)} em reembolso`);
     if(c[0])out.push(`• ${c[0]} aberta(s) com reembolso`);if(c[1])out.push(`• ${c[1]} aberta(s) sem reembolso`);if(c[2])out.push(`• ${c[2]} fechada(s) com reembolso não faturado`);
-    if(old)out.push(`🔴 *${old} OS com mais de 60 dias* — prioridade`);
     out.push('',`✅ *O que fazer:* `+[...cnt.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${k} (${n})`).join(' · '));
     for(const ix of [0,1,2]){const g=L.filter(s=>s.cat===ix).sort((a,b)=>(b.dias??0)-(a.dias??0));if(!g.length)continue;
       out.push('','━━━━━━━━━━━━',`*${CAT[ix].toUpperCase()} (${g.length})*`,'');
@@ -723,7 +723,7 @@ function copyTx(txt,msg){const ok=()=>toast('<b style="color:var(--green)">'+msg
   const fb=()=>{const ta=$('rptTx');ta.focus();ta.select();try{document.execCommand('copy');ok()}catch(e){toast('Selecione o texto e copie com Ctrl+C.')}};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()}
 $('pCat').onclick=e=>{const b=e.target.closest('.pcb');if(!b)return;const c=+b.dataset.c;if(selCat.has(c)){if(selCat.size>1)selCat.delete(c)}else selCat.add(c);try{localStorage.setItem('proc-cat',JSON.stringify([...selCat]))}catch(_){}if(vt.vtPend)vt.vtPend.clearSel();tPend()};
-$('anGrid').onclick=e=>{const b=e.target.closest('.anc');if(!b)return;selAn=b.dataset.a;if(vt.vtPend)vt.vtPend.clearSel();tPend()};
+$('anGrid').onclick=e=>{const b=e.target.closest('.anc');if(!b)return;selAn=b.dataset.a;if(vt.vtPend)vt.vtPend.clearSel();tPend();anSelTxt()};
 $('waAn').onclick=()=>{const t=$('rptTx').value;if(!selAn){toast('Escolha um analista no card antes de abrir o WhatsApp.<br>Para todos, use <b>Copiar mensagem</b>.',6000);return}if(t.length>6000){toast('Mensagem muito longa para abrir direto. Use <b>Copiar mensagem</b> e cole no WhatsApp.',7000);return}const a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(t);a.target='_blank';a.rel='noopener';a.click()};
 $('cpAn').onclick=()=>copyTx($('rptTx').value,selAn?'Relatório de '+selAn+' copiado':'Relatório de todos copiado');
 function grp(key){const m=new Map();for(const s of FOS){const k=key(s)||'(sem cliente)';let g=m.get(k);if(!g){g={k,L:[]};m.set(k,g)}g.L.push(s)}
@@ -770,12 +770,12 @@ async function loadSaved(){try{const d=await idb();return await new Promise(ok=>
 function use(o){RAW=o;parseAoA(o.aoa.map(r=>r.map(c=>c&&c.__d?new Date(c.__d):c)));buildFilters();
   $('empty').style.display='none';$('app').style.display='';
   $('baseInfo').innerHTML=`Base: <b>${esc(o.name)}</b> · carregada em ${new Date(o.at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${fmtI.format(META.n)} linhas, ${fmtI.format(META.os)} OS · entradas de ${dStr(META.dMin)} a ${dStr(META.dMax)} · idades e atrasos contados até hoje (${dStr(HOJE)})`;
-  render()}
+  paintUpd();render()}
 async function readFile(f){if(!f)return;if(!/\.xlsx?$/i.test(f.name)){toast('<b style="color:var(--red)">Escolha um arquivo Excel (.xlsx)</b>');return}
   try{if(typeof XLSX==='undefined')throw new Error('O leitor de Excel não carregou. Verifique a internet e recarregue a página.');
     const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];
     const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
-    const o={name:f.name,at:Date.now(),aoa:aoa.map(r=>r.map(c=>c instanceof Date?{__d:c.getTime()}:c))};
+    const o={name:f.name,at:Date.now(),mod:f.lastModified||null,aoa:aoa.map(r=>r.map(c=>c instanceof Date?{__d:c.getTime()}:c))};
     use(o);saveBase(o);toast(`<b style="color:var(--green)">Base carregada</b><br>${fmtI.format(META.n)} linhas · ${fmtI.format(META.os)} OS`,4000)}
   catch(e){toast('<b style="color:var(--red)">Não consegui ler o arquivo</b><br>'+esc(e.message||e),12000)}}
 $('btnLoad').onclick=()=>$('fileIn').click();$('fileIn').onchange=e=>{readFile(e.target.files[0]);e.target.value=''};
@@ -788,6 +788,23 @@ $('drop').onclick=()=>$('fileIn').click();
 // tema claro/escuro
 (function(){const b=$('btnTheme');if(!b)return;const lbl=()=>{const l=document.documentElement.classList.contains('light');b.setAttribute('aria-checked',l?'true':'false');b.title=l?'Tema claro (clique para escuro)':'Tema escuro (clique para claro)'};lbl();
   b.onclick=()=>{const l=document.documentElement.classList.toggle('light');try{localStorage.setItem('loc-theme',l?'light':'dark')}catch(e){}lbl();render()}})();
+
+// selo de atualização do relatório (hora em que o Excel foi gerado/baixado; se não houver, hora em que foi carregado)
+function paintUpd(){const b=$('upd');if(!RAW){b.style.display='none';return}const w=new Date(RAW.mod||RAW.at);
+  const min=Math.max(0,Math.round((Date.now()-w)/6e4)),h=min/60;
+  const rel=min<1?'agora mesmo':min<60?'há '+min+' min':h<24?'há '+Math.floor(h)+' h'+(min%60?' '+(min%60)+' min':''):'há '+Math.floor(h/24)+' dia'+(Math.floor(h/24)>1?'s':'');
+  const cls=h<24?'ok':h<48?'mid':'old';b.className='upd '+cls;b.style.display='';
+  b.innerHTML=`<span class="dot"></span><span><b>Relatório de ${w.toLocaleDateString('pt-BR')} às ${w.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</b><br><span class="rel">${rel}${cls==='old'?' · carregue o relatório de hoje':''}</span></span>`;
+  b.title='Hora em que o arquivo Excel foi gerado. Carregado na página em '+new Date(RAW.at).toLocaleString('pt-BR')}
+setInterval(paintUpd,60000);
+// recolher filtros e cards de analistas (lembra a escolha neste computador)
+function setTgl(btn,el,cls,on,txtOn,txtOff){el.classList.toggle(cls,on);btn.textContent=on?txtOn:txtOff;try{localStorage.setItem('proc-'+btn.id,on?'1':'0')}catch(_){}}
+const tglF=on=>setTgl($('tgl'),$('fcard'),'min',on,'▼ Expandir filtros','▲ Recolher filtros');
+const tglA=on=>{setTgl($('tglAn'),$('anGrid'),'hid',on,'▼ Mostrar analistas','▲ Recolher analistas');anSelTxt()};
+function anSelTxt(){$('anSel').textContent=$('anGrid').classList.contains('hid')?(selAn?'Analista escolhido: '+selAn:'Mostrando todos os analistas'):''}
+$('tgl').onclick=()=>tglF(!$('fcard').classList.contains('min'));
+$('tglAn').onclick=()=>tglA(!$('anGrid').classList.contains('hid'));
+try{if(localStorage.getItem('proc-tgl')==='1')tglF(true);if(localStorage.getItem('proc-tglAn')==='1')tglA(true)}catch(_){}
 
 </script>
 </body>
