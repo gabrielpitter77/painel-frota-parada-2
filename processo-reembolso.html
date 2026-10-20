@@ -670,7 +670,7 @@ try{const x=JSON.parse(localStorage.getItem('proc-cat')||'null');if(Array.isArra
 const pendOS=()=>FOS.filter(s=>s.cat<3);
 function tPend(){const P=pendOS(),A=new Map();
   for(const s of P){const k=s.an||'(sem analista)';let g=A.get(k);if(!g){g={k,c:[0,0,0],re:0,max:0,L:[]};A.set(k,g)}g.c[s.cat]++;g.L.push(s);if(selCat.has(s.cat)){g.re+=s.valRe||0;g.max=Math.max(g.max,s.dias||0)}}
-  const G=[...A.values()].map(g=>Object.assign(g,{n:g.c.reduce((t,x,ix)=>t+(selCat.has(ix)?x:0),0)})).filter(g=>g.n).sort((a,b)=>b.n-a.n||b.max-a.max);
+  const G=[...A.values()].map(g=>Object.assign(g,{n:g.c.reduce((t,x,ix)=>t+(selCat.has(ix)?x:0),0)})).filter(g=>g.n).sort((a,b)=>(a.k==='(sem analista)')-(b.k==='(sem analista)')||a.k.localeCompare(b.k,'pt-BR',{sensitivity:'base'}));
   if(selAn&&!G.some(g=>g.k===selAn))selAn='';
   const tc=[0,1,2].map(ix=>P.filter(s=>s.cat===ix).length);
   $('pCat').innerHTML=[0,1,2].map(ix=>`<button type="button" class="pcb${selCat.has(ix)?' on':''}" data-c="${ix}" style="--c:${CATC[ix]}"><span class="ck">${selCat.has(ix)?'✓':''}</span><span><b>${fmtI.format(tc[ix])}</b>${CAT[ix]}</span></button>`).join('')+
