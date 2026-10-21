@@ -304,6 +304,7 @@ body.drag main{outline:2px dashed var(--amber);outline-offset:-6px}
 .pdn{display:inline-block;font-size:11px;padding:0 6px;margin-right:4px;border:1px solid var(--line);color:var(--text2);line-height:18px}
 .rptw{margin-top:12px}.rpth{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}.rpth b{font-size:13px}
 #rptTx{width:100%;min-height:220px;resize:vertical;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.5;padding:10px}
+#localBadge{display:none;gap:10px;align-items:center;background:rgba(245,166,35,.15);border-bottom:1px solid var(--amber);color:var(--amber);font-family:var(--mono);font-size:12px;padding:8px 24px;line-height:1.5}#localBadge b{color:var(--text)}
 footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;padding:18px 16px 24px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -313,12 +314,13 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
 <header>
   <div class="brand">LOC <b>FROTAS</b></div>
   <h1>Processo de Reembolso · OS → OC → NF → Pagamento</h1>
-  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a><button class="btn amber" id="btnLoad">Carregar base</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden></div>
+  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a><button class="btn amber" id="btnLoad">Carregar base</button><button class="btn amber" id="btnPub" style="display:none">Gerar base para publicar</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden></div>
 </header>
+<div id="localBadge"><span id="lbTxt"></span></div>
 <main>
   <div id="empty" class="bracket emptyb">
     <h2>Carregue o relatório “Processo - OS / OC / NF / Pagamentos”</h2>
-    <p>Clique em <b>Carregar base</b> ou arraste o arquivo Excel para esta página. O arquivo é lido só neste computador: nada é enviado para a internet. Na próxima vez que abrir a página, a última base carregada aparece sozinha.</p>
+    <p>Clique em <b>Carregar base</b> ou arraste o arquivo Excel para esta página. Depois de carregar, clique em <b>Gerar base para publicar</b> e suba o arquivo no GitHub para que todos que abrirem o link vejam a mesma base.</p>
     <div id="drop" class="dropz">Solte o arquivo .xlsx aqui</div>
   </div>
   <div id="app" style="display:none">
@@ -711,10 +713,9 @@ function rptTxt(list){const by=new Map();for(const s of list){const k=s.an||'(se
     out.push(`${sau}, ${nome}! 👋`,'',`Segue a lista de *OS pendentes de regularização* no sistema (posição de ${dStr(HOJE)}):`,'');
     out.push(`📋 *Resumo: ${L.length} OS* · ${fmtM.format(re)} em reembolso`);
     if(c[0])out.push(`• ${c[0]} aberta(s) com reembolso`);if(c[1])out.push(`• ${c[1]} aberta(s) sem reembolso`);if(c[2])out.push(`• ${c[2]} fechada(s) com reembolso não faturado`);
-    out.push('',`✅ *O que fazer:* `+[...cnt.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${k} (${n})`).join(' · '));
     for(const ix of [0,1,2]){const g=L.filter(s=>s.cat===ix).sort((a,b)=>(b.dias??0)-(a.dias??0));if(!g.length)continue;
       out.push('','━━━━━━━━━━━━',`*${CAT[ix].toUpperCase()} (${g.length})*`,'');
-      for(const s of g)out.push(`${dot(s.dias)} *OS ${s.os}* · ${s.placa||'-'} · ${cliCurto(s.cliente)} · ${fmtI.format(s.dias??0)} dias`,`     ↳ ${acoes(s).join('; ')}`)}
+      for(const s of g)out.push(`${dot(s.dias)} *OS ${s.os}* · ${s.placa||'-'} · ${s.forn.size?[...s.forn].map(f=>cliCurto(f)).join(' / '):'sem fornecedor'} · ${fmtI.format(s.dias??0)} dias`)}
     out.push('','━━━━━━━━━━━━','🔴 mais de 60 dias · 🟡 31 a 60 · 🟢 até 30','','Por favor, regularize e me avise quando concluir. Obrigado!','','')}
   return out.join('\n').trim()}
 function rpt(){const t=vt.vtPend;if(!t)return;const L=t.rows();$('rptTx').value=L.length?rptTxt(L):'Nenhuma OS pendente com os filtros atuais.';
@@ -799,15 +800,29 @@ async function readFile(f){if(!f)return;if(!/\.xlsx?$/i.test(f.name)){toast('<b 
   try{let d;try{d=await parseInWorker(await f.arrayBuffer())}catch(we){if(/coluna|Código/.test(we.message||''))throw we;
       busy('Lendo sem o modo em segundo plano (a tela pode congelar alguns segundos)…');await new Promise(r=>setTimeout(r,60));d=parseMain(await f.arrayBuffer())}
     const o={name:f.name,at:Date.now(),mod:f.lastModified||null,tot:d.tot,aoa:d.aoa};
-    use(o);saveBase(o);toast(`<b style="color:var(--green)">Base carregada em ${Math.max(1,Math.round((Date.now()-t0)/1000))} s</b><br>${fmtI.format(d.tot.os)} OS no arquivo · ${fmtI.format(META.os)} com pendência ou parcela em aberto`,6000)}
+    use(o);saveBase(o);localState(true);toast(`<b style="color:var(--green)">Base carregada em ${Math.max(1,Math.round((Date.now()-t0)/1000))} s</b><br>${fmtI.format(d.tot.os)} OS no arquivo · ${fmtI.format(META.os)} com pendência ou parcela em aberto`,6000)}
   catch(e){toast('<b style="color:var(--red)">Não consegui ler o arquivo</b><br>'+esc(e.message||e),12000)}}
 $('btnLoad').onclick=()=>$('fileIn').click();$('fileIn').onchange=e=>{readFile(e.target.files[0]);e.target.value=''};
 ['dragover','dragenter'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'||!e.relatedTarget)document.body.classList.remove('drag')}));
 document.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)readFile(f)});
 $('drop').onclick=()=>$('fileIn').click();
+// ---------------- base publicada (compartilhada pelo link) ----------------
+const PUB='processo-base.json.gz';let PUBAT=null;
+async function gunzipJSON(buf){try{const st=new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(st).text())}
+  catch(e){return JSON.parse(new TextDecoder().decode(buf))}}
+async function loadPublished(){try{const r=await fetch(PUB+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return null;const o=await gunzipJSON(await r.arrayBuffer());return o&&o.aoa?o:null}catch(e){return null}}
+async function gzipBlob(o){const st=new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('gzip'));return await new Response(st).blob()}
+function localState(isLocal){$('localBadge').style.display=isLocal?'flex':'none';$('btnPub').style.display=isLocal?'':'none';
+  if(isLocal)$('lbTxt').innerHTML=`⚠ Você está vendo uma base carregada <b>só neste computador</b>. Quem abrir o link vê ${PUBAT?'a base publicada de <b>'+new Date(PUBAT).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</b>':'<b>a página vazia</b> (nenhuma base publicada ainda)'}. Para todos verem esta, clique em <b>Gerar base para publicar</b> e suba o arquivo no GitHub.`}
+$('btnPub').onclick=async()=>{if(!RAW)return;try{const b=await gzipBlob({name:RAW.name,at:RAW.at,mod:RAW.mod,tot:RAW.tot,aoa:RAW.aoa,pubAt:Date.now()});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=PUB;a.click();
+  toast(`<b style="color:var(--green)">Arquivo ${PUB} gerado (${fmtN.format(b.size/1048576)} MB)</b><br>Suba esse arquivo no repositório <b>painel-frota-parada-2</b> do GitHub (Add file → Upload files), substituindo o anterior. Em alguns minutos o link mostra a base nova para todos.`,20000)}
+  catch(e){toast('<b style="color:var(--red)">Não consegui gerar o arquivo</b><br>'+esc(e.message||e),10000)}};
 (async()=>{try{const t=localStorage.getItem('proc-tab');if(t&&R[t]){const el=document.querySelector(`.tab[data-v="${t}"]`);if(el)el.click()}}catch(_){}
-  const o=await loadSaved();if(o){try{use(o)}catch(e){}}})();
+  const [loc,pub]=await Promise.all([loadSaved(),loadPublished()]);PUBAT=pub?pub.at:null;
+  const useLoc=loc&&(!pub||loc.at>pub.at);
+  try{if(useLoc){use(loc);localState(true)}else if(pub){use(pub);localState(false)}}catch(e){}})();
 // tema claro/escuro
 (function(){const b=$('btnTheme');if(!b)return;const lbl=()=>{const l=document.documentElement.classList.contains('light');b.setAttribute('aria-checked',l?'true':'false');b.title=l?'Tema claro (clique para escuro)':'Tema escuro (clique para claro)'};lbl();
   b.onclick=()=>{const l=document.documentElement.classList.toggle('light');try{localStorage.setItem('loc-theme',l?'light':'dark')}catch(e){}lbl();render()}})();
