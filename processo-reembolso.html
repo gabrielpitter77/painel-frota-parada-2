@@ -715,7 +715,7 @@ function rptTxt(list){const by=new Map();for(const s of list){const k=s.an||'(se
     if(c[0])out.push(`• ${c[0]} aberta(s) com reembolso`);if(c[1])out.push(`• ${c[1]} aberta(s) sem reembolso`);if(c[2])out.push(`• ${c[2]} fechada(s) com reembolso não faturado`);
     for(const ix of [0,1,2]){const g=L.filter(s=>s.cat===ix).sort((a,b)=>(b.dias??0)-(a.dias??0));if(!g.length)continue;
       out.push('','━━━━━━━━━━━━',`*${CAT[ix].toUpperCase()} (${g.length})*`,'');
-      for(const s of g)out.push(`${dot(s.dias)} *OS ${s.os}* · ${s.placa||'-'} · ${s.forn.size?[...s.forn].map(f=>cliCurto(f)).join(' / '):'sem fornecedor'} · ${fmtI.format(s.dias??0)} dias`)}
+      for(const s of g){const ac=acoes(s).filter(x=>x!=='lançar NF');out.push(`${dot(s.dias)} *OS ${s.os}* · ${s.placa||'-'} · ${s.forn.size?[...s.forn].map(f=>cliCurto(f)).join(' / '):'sem fornecedor'} · ${fmtI.format(s.dias??0)} dias`);if(ac.length)out.push(`     ↳ ${ac.join('; ')}`)}}
     out.push('','━━━━━━━━━━━━','🔴 mais de 60 dias · 🟡 31 a 60 · 🟢 até 30','','Por favor, regularize e me avise quando concluir. Obrigado!','','')}
   return out.join('\n').trim()}
 function rpt(){const t=vt.vtPend;if(!t)return;const L=t.rows();$('rptTx').value=L.length?rptTxt(L):'Nenhuma OS pendente com os filtros atuais.';
