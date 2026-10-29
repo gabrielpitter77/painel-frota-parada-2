@@ -333,7 +333,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
   </div>
   <div id="app" style="display:none">
     <div class="pbar"><span id="baseInfo"></span><div class="upd" id="upd" style="display:none"></div></div>
-    <div class="filters bracket" id="fcard">
+    <div class="filters bracket" id="fcard" style="display:none">
       <div class="f"><label>Mês (envio da pesquisa)</label><select id="fMes"></select></div>
       <div class="f"><label>Analista</label><select id="fAn"></select></div>
       <div class="f"><label>Tipo de manutenção</label><select id="fTp"></select></div>
@@ -707,11 +707,11 @@ const dIn=v=>v?Math.floor(new Date(v+'T00:00:00Z').getTime()/DAY):null;
 [['fMes','mes'],['fAn','an'],['fTp','tp'],['fUf','uf']].forEach(([id,k])=>$(id).onchange=()=>{FL[k]=$(id).value;refresh()});
 $('fDe').onchange=()=>{FL.de=dIn($('fDe').value);refresh()};$('fAte').onchange=()=>{FL.ate=dIn($('fAte').value);refresh()};
 let tq;$('q').oninput=()=>{clearTimeout(tq);tq=setTimeout(()=>{FL.q=$('q').value;refresh()},250)};
-$('clr').onclick=()=>{NAVBACK=null;crumb();Object.assign(FL,{mes:'',an:'',tp:'',uf:'',de:null,ate:null,q:''});['fMes','fAn','fTp','fUf','fDe','fAte','q'].forEach(i=>$(i).value='');refresh()};
+$('clr').onclick=()=>{NAVBACK=null;Object.assign(FL,{mes:'',an:'',tp:'',uf:'',de:null,ate:null,q:''});['fMes','fAn','fTp','fUf','fDe','fAte','q'].forEach(i=>$(i).value='');refresh();crumb()};
 
 // ================= abas =================
 let cur='ger';const dirty={};
-function showTab(v){cur=v;document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('main section[data-p]').forEach(s=>s.hidden=s.dataset.p!==cur);render()}
+function showTab(v){cur=v;document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('main section[data-p]').forEach(s=>s.hidden=s.dataset.p!==cur);render();if(typeof crumb==='function')crumb()}
 $('tabs').onclick=e=>{const t=e.target.closest('.tab');if(!t)return;showTab(t.dataset.v)};
 // ---- navegação entre abas: links nos números levam para a aba certa já filtrada
 const TABN={ger:'Visão geral',an:'Analistas',tr:'Tratativa',rk:'Clientes em risco',pz:'Prazos e comunicação',rt:'Retornos',cm:'Comentários',sr:'Sem resposta',ps:'Pesquisas'};
@@ -725,9 +725,10 @@ function go(o){const prev={tab:cur,fl:Object.assign({},FL),tr:trMode,cm:cmMode,p
   if(o.wk!=null){FL.de=o.wk;FL.ate=o.wk+6;$('fDe').value=isoD(o.wk);$('fAte').value=isoD(o.wk+6)}
   if(o.tr){trMode=o.tr==='d'?'d':o.tr==='n'?'n':'dn';segSet('trSeg',trMode)}if(o.cm){cmMode=o.cm;segSet('cmSeg',cmMode)}if(o.pz){pzMode=o.pz;segSet('pzSeg',pzMode)}if(o.ps){psMode=o.ps;segSet('psSeg',psMode)}
   NAVBACK=prev;refresh();showTab(o.t||cur);window.scrollTo({top:$('tabs').getBoundingClientRect().top+scrollY-10,behavior:'smooth'});crumb()}
-function crumb(){const el=$('crumb');if(!NAVBACK){el.style.display='none';return}const p=[];if(FL.an)p.push('analista <b>'+esc(FL.an)+'</b>');if(FL.tp)p.push(esc(FL.tp));if(FL.uf)p.push('UF '+esc(FL.uf));if(FL.de!=null)p.push(dStr(FL.de)+' a '+dStr(FL.ate));if(FL.q)p.push('“'+esc(FL.q)+'”');
-  el.style.display='flex';el.innerHTML=`<span>Você está em <b>${TABN[cur]}</b>${p.length?' · '+p.join(' · '):''}</span><button class="btn" id="crBack">← Voltar para ${TABN[NAVBACK.tab]}</button>`;
-  $('crBack').onclick=()=>{const b=NAVBACK;NAVBACK=null;Object.assign(FL,b.fl);$('fAn').value=FL.an;$('fTp').value=FL.tp;$('fUf').value=FL.uf;$('q').value=FL.q;$('fMes').value=FL.mes;$('fDe').value=FL.de!=null?isoD(FL.de):'';$('fAte').value=FL.ate!=null?isoD(FL.ate):'';
+function crumb(){const el=$('crumb');const act=FL.an||FL.tp||FL.uf||FL.q||FL.mes||FL.de!=null||FL.ate!=null;if(!NAVBACK&&!act){el.style.display='none';return}const p=[];if(FL.an)p.push('analista <b>'+esc(FL.an)+'</b>');if(FL.tp)p.push(esc(FL.tp));if(FL.uf)p.push('UF '+esc(FL.uf));if(FL.de!=null)p.push(dStr(FL.de)+' a '+dStr(FL.ate));if(FL.q)p.push('“'+esc(FL.q)+'”');
+  el.style.display='flex';el.innerHTML=`<span>Você está em <b>${TABN[cur]}</b>${p.length?' · '+p.join(' · '):''}</span><span style="display:flex;gap:8px">${NAVBACK?`<button class="btn" id="crBack">← Voltar para ${TABN[NAVBACK.tab]}</button>`:''}${act?'<button class="btn" id="crClr">Limpar filtro</button>':''}</span>`;
+  if($('crClr'))$('crClr').onclick=()=>$('clr').click();
+  if($('crBack'))$('crBack').onclick=()=>{const b=NAVBACK;NAVBACK=null;Object.assign(FL,b.fl);$('fAn').value=FL.an;$('fTp').value=FL.tp;$('fUf').value=FL.uf;$('q').value=FL.q;$('fMes').value=FL.mes;$('fDe').value=FL.de!=null?isoD(FL.de):'';$('fAte').value=FL.ate!=null?isoD(FL.ate):'';
     trMode=b.tr;cmMode=b.cm;pzMode=b.pz;psMode=b.ps;segSet('trSeg',trMode);segSet('cmSeg',cmMode);segSet('pzSeg',pzMode);segSet('psSeg',psMode);refresh();showTab(b.tab);crumb()}}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-go]');if(!a)return;e.preventDefault();e.stopPropagation();try{go(JSON.parse(a.dataset.go))}catch(err){}},true);
 let F=[];function refresh(){F=rows();const n=['mes','an','tp','uf','q'].filter(k=>FL[k]).length+(FL.de!=null)+(FL.ate!=null);$('nAct').textContent=n?n+' filtro(s) ativo(s)':'';for(const k of ['ger','an','tr','rk','pz','rt','cm','sr','ps'])dirty[k]=true;render()}
