@@ -306,6 +306,10 @@ table.ct tr.tot td{border-top:1px solid var(--line);color:var(--text);font-weigh
 .rk3{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#fff;background:var(--red);padding:2px 7px;margin-left:8px;vertical-align:middle}
 table.lg tr.pv td{color:var(--amber)}
 #localBadge{display:none;gap:10px;align-items:center;background:rgba(245,166,35,.15);border-bottom:1px solid var(--amber);color:var(--amber);font-family:var(--mono);font-size:12px;padding:8px 24px;line-height:1.5}#localBadge b{color:var(--text)}
+a.go{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}a.go:hover{color:var(--amber);text-decoration-style:solid}
+.vt td a.go{display:inline-block;min-width:16px}
+.kgo{cursor:pointer;transition:border-color .15s}.kgo:hover{border-color:var(--amber)}
+#crumb{display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--amber-dim);border:1px solid var(--amber);padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:12px;color:var(--text2)}#crumb b{color:var(--text)}
 footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;padding:18px 16px 24px}
 @media (max-width:700px){main{padding:10px 12px 0}header{padding:12px}.filters .wide{grid-column:auto}}
 </style>
@@ -339,6 +343,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
       <div class="f wide"><label>Busca (cliente, OS, placa, contato, comentário)</label><input id="q" placeholder="ex.: sodexo, 84557, TCT8C65" autocomplete="off"></div>
       <div class="f" style="display:flex;gap:8px;align-items:flex-end"><button class="btn" id="clr">Limpar filtros</button><span id="nAct" class="note"></span></div>
     </div>
+    <div id="crumb"></div>
     <div class="tabsw"><div class="tabs" id="tabs">
       <div class="tab on" data-v="ger">Visão geral</div>
       <div class="tab" data-v="an">Analistas</div>
@@ -397,7 +402,7 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
       <div class="vt sm" id="vtCt"></div>
     </section>
     <section data-p="ps" hidden>
-      <div class="tbar"><span id="cntPs"></span><span class="note">Uma linha por pesquisa enviada. Clique numa linha para ver o histórico da OS.</span><div class="sp"><button class="btn amber" data-csv="ps">Exportar CSV</button></div></div>
+      <div class="tbar"><div class="seg" id="psSeg"><button data-v="all" class="on">Todas</button><button data-v="r">Respondidas</button><button data-v="s">Sem resposta</button></div><span id="cntPs"></span><span class="note">Uma linha por pesquisa enviada. Clique numa linha para ver o histórico da OS.</span><div class="sp"><button class="btn amber" data-csv="ps">Exportar CSV</button></div></div>
       <div class="vt" id="vtPs"></div>
       <div id="psDet"></div>
     </section>
@@ -702,11 +707,29 @@ const dIn=v=>v?Math.floor(new Date(v+'T00:00:00Z').getTime()/DAY):null;
 [['fMes','mes'],['fAn','an'],['fTp','tp'],['fUf','uf']].forEach(([id,k])=>$(id).onchange=()=>{FL[k]=$(id).value;refresh()});
 $('fDe').onchange=()=>{FL.de=dIn($('fDe').value);refresh()};$('fAte').onchange=()=>{FL.ate=dIn($('fAte').value);refresh()};
 let tq;$('q').oninput=()=>{clearTimeout(tq);tq=setTimeout(()=>{FL.q=$('q').value;refresh()},250)};
-$('clr').onclick=()=>{Object.assign(FL,{mes:'',an:'',tp:'',uf:'',de:null,ate:null,q:''});['fMes','fAn','fTp','fUf','fDe','fAte','q'].forEach(i=>$(i).value='');refresh()};
+$('clr').onclick=()=>{NAVBACK=null;crumb();Object.assign(FL,{mes:'',an:'',tp:'',uf:'',de:null,ate:null,q:''});['fMes','fAn','fTp','fUf','fDe','fAte','q'].forEach(i=>$(i).value='');refresh()};
 
 // ================= abas =================
 let cur='ger';const dirty={};
-$('tabs').onclick=e=>{const t=e.target.closest('.tab');if(!t)return;cur=t.dataset.v;document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===t));document.querySelectorAll('main section[data-p]').forEach(s=>s.hidden=s.dataset.p!==cur);render()};
+function showTab(v){cur=v;document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('main section[data-p]').forEach(s=>s.hidden=s.dataset.p!==cur);render()}
+$('tabs').onclick=e=>{const t=e.target.closest('.tab');if(!t)return;showTab(t.dataset.v)};
+// ---- navegação entre abas: links nos números levam para a aba certa já filtrada
+const TABN={ger:'Visão geral',an:'Analistas',tr:'Tratativa',rk:'Clientes em risco',pz:'Prazos e comunicação',rt:'Retornos',cm:'Comentários',sr:'Sem resposta',ps:'Pesquisas'};
+const lk=(html,o,t)=>`<a class="go" data-go="${esc(JSON.stringify(o))}"${t?` title="${esc(t)}"`:''}>${html}</a>`;
+const isoD=d=>new Date(d*DAY).toISOString().slice(0,10);
+function segSet(id,v){const el=$(id);if(el)el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
+let NAVBACK=null;
+function go(o){const prev={tab:cur,fl:Object.assign({},FL),tr:trMode,cm:cmMode,pz:pzMode,ps:psMode};
+  if('an' in o){FL.an=o.an||'';$('fAn').value=FL.an}if('tp' in o){FL.tp=o.tp||'';$('fTp').value=FL.tp}if('uf' in o){FL.uf=o.uf||'';$('fUf').value=FL.uf}
+  if('q' in o){FL.q=o.q||'';$('q').value=FL.q}if('mes' in o){FL.mes=o.mes==null?'':String(o.mes);$('fMes').value=FL.mes}
+  if(o.wk!=null){FL.de=o.wk;FL.ate=o.wk+6;$('fDe').value=isoD(o.wk);$('fAte').value=isoD(o.wk+6)}
+  if(o.tr){trMode=o.tr==='d'?'d':o.tr==='n'?'n':'dn';segSet('trSeg',trMode)}if(o.cm){cmMode=o.cm;segSet('cmSeg',cmMode)}if(o.pz){pzMode=o.pz;segSet('pzSeg',pzMode)}if(o.ps){psMode=o.ps;segSet('psSeg',psMode)}
+  NAVBACK=prev;refresh();showTab(o.t||cur);window.scrollTo({top:$('tabs').getBoundingClientRect().top+scrollY-10,behavior:'smooth'});crumb()}
+function crumb(){const el=$('crumb');if(!NAVBACK){el.style.display='none';return}const p=[];if(FL.an)p.push('analista <b>'+esc(FL.an)+'</b>');if(FL.tp)p.push(esc(FL.tp));if(FL.uf)p.push('UF '+esc(FL.uf));if(FL.de!=null)p.push(dStr(FL.de)+' a '+dStr(FL.ate));if(FL.q)p.push('“'+esc(FL.q)+'”');
+  el.style.display='flex';el.innerHTML=`<span>Você está em <b>${TABN[cur]}</b>${p.length?' · '+p.join(' · '):''}</span><button class="btn" id="crBack">← Voltar para ${TABN[NAVBACK.tab]}</button>`;
+  $('crBack').onclick=()=>{const b=NAVBACK;NAVBACK=null;Object.assign(FL,b.fl);$('fAn').value=FL.an;$('fTp').value=FL.tp;$('fUf').value=FL.uf;$('q').value=FL.q;$('fMes').value=FL.mes;$('fDe').value=FL.de!=null?isoD(FL.de):'';$('fAte').value=FL.ate!=null?isoD(FL.ate):'';
+    trMode=b.tr;cmMode=b.cm;pzMode=b.pz;psMode=b.ps;segSet('trSeg',trMode);segSet('cmSeg',cmMode);segSet('pzSeg',pzMode);segSet('psSeg',psMode);refresh();showTab(b.tab);crumb()}}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-go]');if(!a)return;e.preventDefault();e.stopPropagation();try{go(JSON.parse(a.dataset.go))}catch(err){}},true);
 let F=[];function refresh(){F=rows();const n=['mes','an','tp','uf','q'].filter(k=>FL[k]).length+(FL.de!=null)+(FL.ate!=null);$('nAct').textContent=n?n+' filtro(s) ativo(s)':'';for(const k of ['ger','an','tr','rk','pz','rt','cm','sr','ps'])dirty[k]=true;render()}
 function render(){if(!dirty[cur])return;dirty[cur]=false;({ger:rGer,an:rAn,tr:rTr,rk:rRk,pz:rPz,rt:rRt,cm:rCm,sr:rSr,ps:rPs})[cur]()}
 function boot(){$('empty').style.display='none';$('app').style.display='';enrich();fillFilters();info();refresh()}
@@ -716,15 +739,15 @@ function info(){const L=R,a=Math.min(...L.map(r=>r.cr).filter(x=>x!=null)),b=Mat
 
 // ================= visão geral =================
 const npsCol=v=>v==null?'var(--muted)':v>=META?'var(--green)':v>=META-10?'var(--amber)':'var(--red)';
-function kpi(l,v,s,c,cl){return `<div class="kpi bracket${cl?' '+cl:''}"><div class="l">${l}</div><div class="v"${c?` style="color:${c}"`:''}>${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`}
+function kpi(l,v,s,c,cl,o,t){return `<div class="kpi bracket${cl?' '+cl:''}${o?' kgo':''}"${o?` data-go="${esc(JSON.stringify(o))}" title="${esc(t||'')}"`:''}><div class="l">${l}</div><div class="v"${c?` style="color:${c}"`:''}>${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`}
 function rGer(){const s=stats(F),fo=folga(s);
   $('kpis').innerHTML=
-    kpi('NPS · meta '+META,s.nps==null?'—':f1(s.nps),s.n?`${s.nps>=META?'✔ acima da meta':'✖ abaixo da meta'} · ${fmtI.format(s.n)} respostas`:'sem respostas no filtro',npsCol(s.nps),'big')+
+    kpi('NPS · meta '+META,s.nps==null?'—':f1(s.nps),s.n?`${s.nps>=META?'✔ acima da meta':'✖ abaixo da meta'} · ${fmtI.format(s.n)} respostas`:'sem respostas no filtro',npsCol(s.nps),'big',{t:'an'},'Ver por analista')+
     kpi(fo&&fo.ok?'Folga para a meta':'Para voltar à meta',fo==null?'—':fo.ok?(fo.k<=0?'Nenhuma':fo.k+' detrator'+(fo.k>1?'es':'')):fo.k+' promotor'+(fo.k>1?'es':''),fo==null?'':fo.ok?(fo.k<=0?'o próximo detrator derruba o NPS para '+((s.P-s.D-1)/(s.n+1)*100).toFixed(2).replace('.',',')+' (abaixo de '+META+')':'mais que isso (sem novos promotores) e o NPS fica abaixo de '+META):'seguidos, sem nenhum detrator novo',fo&&fo.ok&&fo.k>2?'var(--green)':fo&&fo.ok?'var(--amber)':'var(--red)')+
-    kpi('Taxa de resposta',pc(s.tx),`${fmtI.format(s.n)} de ${fmtI.format(s.env)} pesquisas enviadas`,s.tx!=null&&s.tx<.3?'var(--amber)':null)+
-    kpi('Promotores · 9 e 10',s.n?pc(s.P/s.n):'—',fmtI.format(s.P)+' respostas','var(--green)')+
-    kpi('Neutros · 7 e 8',s.n?pc(s.N/s.n):'—',fmtI.format(s.N)+' respostas','var(--amber)')+
-    kpi('Detratores · 0 a 6',s.n?pc(s.D/s.n):'—',fmtI.format(s.D)+' respostas','var(--red)')+
+    kpi('Taxa de resposta',pc(s.tx),`${fmtI.format(s.n)} de ${fmtI.format(s.env)} pesquisas enviadas`,s.tx!=null&&s.tx<.3?'var(--amber)':null,'',{t:'sr'},'Ver quem não responde')+
+    kpi('Promotores · 9 e 10',s.n?pc(s.P/s.n):'—',fmtI.format(s.P)+' respostas','var(--green)','',{t:'cm',cm:'p'},'Ver os comentários dos promotores')+
+    kpi('Neutros · 7 e 8',s.n?pc(s.N/s.n):'—',fmtI.format(s.N)+' respostas','var(--amber)','',{t:'tr',tr:'n'},'Abrir a tratativa dos neutros')+
+    kpi('Detratores · 0 a 6',s.n?pc(s.D/s.n):'—',fmtI.format(s.D)+' respostas','var(--red)','',{t:'tr',tr:'d'},'Abrir a tratativa dos detratores')+
     kpi('CSAT médio',s.csat==null?'—':f1(s.csat).replace(/,0$/,',0'),'nota de 0 a 10 da satisfação')+
     kpi('Tempo até responder',s.lag==null?'—':f1(s.lag)+' dias','média entre envio e resposta');
   chartWeek();chartResp();chartDist();cuts();months()}
@@ -750,13 +773,13 @@ function chartWeek(){const el=$('chW'),Wk=weeks(),W=Math.max(320,el.clientWidth|
     s+=`<circle cx="${c}" cy="${Y(x.s.nps)}" r="5" fill="${sm?'var(--panel)':'#4F9BFF'}" stroke="#4F9BFF" stroke-width="2"/><text x="${c}" y="${Y(x.s.nps)-10}" text-anchor="middle" class="lbl">${f1(x.s.nps)}</text>`;
     s+=`<rect class="hit" data-i="${i}" x="${c-((W-Lm-Rm)/Math.max(1,Wk.length))/2}" y="${T}" width="${(W-Lm-Rm)/Math.max(1,Wk.length)}" height="${H-T-B}" fill="transparent"/>`});
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${s}</svg>`;
-  hov(el,i=>{const x=Wk[i],e=x.w+6;return `<b>Semana ${dStr(x.w)} a ${dStr(e)}</b><br>NPS ${f1(x.s.nps)}${x.s.n<MINR?' <span style="color:var(--amber)">(amostra pequena)</span>':''}<br>${x.s.n} respostas de ${x.s.env} enviadas<br>${x.s.P} promotores · ${x.s.N} neutros · ${x.s.D} detratores`})}
+  hov(el,i=>{const x=Wk[i],e=x.w+6;return `<b>Semana ${dStr(x.w)} a ${dStr(e)}</b><br>NPS ${f1(x.s.nps)}${x.s.n<MINR?' <span style="color:var(--amber)">(amostra pequena)</span>':''}<br>${x.s.n} respostas de ${x.s.env} enviadas<br>${x.s.P} promotores · ${x.s.N} neutros · ${x.s.D} detratores`},i=>go({t:'ps',wk:Wk[i].w,ps:'all'}))}
 function chartResp(){const el=$('chR'),Wk=weeks(),W=Math.max(320,el.clientWidth||600),H=230,T=16,B=30,Lm=40,Rm=14;if(!Wk.length){el.innerHTML='';return}
   const Y=v=>T+(H-T-B)*(1-v),bw=Math.min(46,(W-Lm-Rm)/Wk.length*.6);let s=axisY(W,H,T,B,Lm,Rm,0,1,[0,.25,.5,.75,1],v=>Math.round(v*100)+'%');
   Wk.forEach((x,i)=>{const c=Lm+(W-Lm-Rm)*(i+.5)/Wk.length,v=x.s.tx||0,y=Y(v);s+=`<path d="M${c-bw/2},${H-B} V${y+3} q0,-3 3,-3 H${c+bw/2-3} q3,0 3,3 V${H-B} Z" fill="#4F9BFF" opacity=".85"/><text x="${c}" y="${y-6}" text-anchor="middle" class="lbl">${Math.round(v*100)}%</text><text x="${c}" y="${H-10}" text-anchor="middle" class="ax">${wl(x.w)}</text>`;
     s+=`<rect class="hit" data-i="${i}" x="${c-(W-Lm-Rm)/Wk.length/2}" y="${T}" width="${(W-Lm-Rm)/Wk.length}" height="${H-T-B}" fill="transparent"/>`});
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${s}</svg>`;
-  hov(el,i=>{const x=Wk[i];return `<b>Semana ${dStr(x.w)} a ${dStr(x.w+6)}</b><br>Taxa de resposta ${pc(x.s.tx)}<br>${x.s.n} respondidas de ${x.s.env} enviadas`})}
+  hov(el,i=>{const x=Wk[i];return `<b>Semana ${dStr(x.w)} a ${dStr(x.w+6)}</b><br>Taxa de resposta ${pc(x.s.tx)}<br>${x.s.n} respondidas de ${x.s.env} enviadas`},i=>go({t:'sr',wk:Wk[i].w}))}
 function chartDist(){const el=$('chD'),W=Math.max(320,el.clientWidth||600),H=230,T=16,B=44,Lm=40,Rm=14,c=new Array(11).fill(0);for(const r of F)if(r.nps!=null)c[Math.max(0,Math.min(10,Math.round(r.nps)))]++;
   const mx=Math.max(1,...c),nice=Math.max(5,Math.ceil(mx/5)*5),Y=v=>T+(H-T-B)*(1-v/nice),bw=(W-Lm-Rm)/11;let s=axisY(W,H,T,B,Lm,Rm,0,nice,[0,nice/2,nice].map(Math.round),v=>v);
   const col=k=>k>=9?'var(--green)':k>=7?'var(--amber)':'var(--red)';
@@ -764,12 +787,13 @@ function chartDist(){const el=$('chD'),W=Math.max(320,el.clientWidth||600),H=230
   const g=(a,b,t,cl)=>{const x1=Lm+bw*a+2,x2=Lm+bw*(b+1)-2;return `<line x1="${x1}" x2="${x2}" y1="${H-14}" y2="${H-14}" stroke="${cl}" stroke-width="3"/><text x="${(x1+x2)/2}" y="${H-2}" text-anchor="middle" class="ax">${t}</text>`};
   s+=g(0,6,'detratores','var(--red)')+g(7,8,'neutros','var(--amber)')+g(9,10,'promotores','var(--green)');
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${s}</svg>`;
-  const n=c.reduce((a,b)=>a+b,0);hov(el,k=>`<b>Nota ${k}</b> · ${k>=9?'promotor':k>=7?'neutro':'detrator'}<br>${c[k]} resposta(s) · ${n?pc(c[k]/n):'—'}`)}
-function hov(el,f){el.querySelectorAll('.hit').forEach(h=>{h.onmousemove=e=>showTip(e,f(+h.dataset.i));h.onmouseleave=hideTip})}
+  const n=c.reduce((a,b)=>a+b,0);hov(el,k=>`<b>Nota ${k}</b> · ${k>=9?'promotor':k>=7?'neutro':'detrator'}<br>${c[k]} resposta(s) · ${n?pc(c[k]/n):'—'}`,k=>{if(!c[k])return;go(k>=9?{t:'cm',cm:'p'}:{t:'tr',tr:k>=7?'n':'d'})})}
+function hov(el,f,c){el.querySelectorAll('.hit').forEach(h=>{h.onmousemove=e=>showTip(e,f(+h.dataset.i)+(c?'<br><span style="color:var(--muted)">clique para abrir</span>':''));h.onmouseleave=hideTip;if(c){h.style.cursor='pointer';h.onclick=()=>{hideTip();c(+h.dataset.i)}}})}
 const DURB=[[0,1,'até 1 dia'],[1,3,'1 a 3 dias'],[3,7,'3 a 7 dias'],[7,15,'7 a 15 dias'],[15,1e9,'mais de 15 dias']];
 function cuts(){const grp=(f)=>{const m=new Map();for(const r of F){const k=f(r);if(k==null)continue;let a=m.get(k);if(!a){a=[];m.set(k,a)}a.push(r)}return m};
   const tb=(t,m,ord)=>{let ks=[...m.keys()];ks=ord?ord.filter(k=>m.has(k)):ks.sort((a,b)=>m.get(b).length-m.get(a).length);
-    return `<table class="ct"><thead><tr><th>${t}</th><th class="num">Enviadas</th><th class="num">Resp.</th><th class="num">Taxa</th><th class="num">NPS</th><th class="num">Det.</th></tr></thead><tbody>${ks.map(k=>{const s=stats(m.get(k));return `<tr><td>${esc(k)}</td><td class="num">${s.env}</td><td class="num">${s.n}</td><td class="num">${pc(s.tx)}</td><td class="num" style="color:${npsCol(s.nps)}">${f1(s.nps)}${s.n&&s.n<MINR?'<span class="warn">*</span>':''}</td><td class="num">${s.D||''}</td></tr>`}).join('')}</tbody></table>`};
+    return `<table class="ct"><thead><tr><th>${t}</th><th class="num">Enviadas</th><th class="num">Resp.</th><th class="num">Taxa</th><th class="num">NPS</th><th class="num">Det.</th></tr></thead><tbody>${ks.map(k=>{const s=stats(m.get(k));const o=ord?null:t==='UF'?{uf:k}:t==='Tipo de manutenção'?{tp:k}:null,o2=t.startsWith('Previsões')&&k!=='nenhuma'&&k!=='1 previsão'?{t:'pz',pz:'pa'}:t.startsWith('Maior tempo')&&(k==='48 a 96 h'||k==='mais de 96 h')?{t:'pz',pz:'sil'}:t==='Retorno do carro'&&k.startsWith('carro')?{t:'rt'}:null,oo=o||o2;
+      return `<tr><td>${oo?lk(esc(k),oo,o?'Filtrar o painel por '+k:'Abrir a lista'):esc(k)}</td><td class="num">${s.env}</td><td class="num">${s.n}</td><td class="num">${pc(s.tx)}</td><td class="num" style="color:${npsCol(s.nps)}">${f1(s.nps)}${s.n&&s.n<MINR?'<span class="warn">*</span>':''}</td><td class="num">${s.D?lk(s.D,Object.assign({t:'tr',tr:'d'},o||{}),'Ver os detratores'):''}</td></tr>`}).join('')}</tbody></table>`};
   const du=grp(r=>{if(r.dur==null)return null;const b=DURB.find(x=>r.dur<x[1]);return b?b[2]:null});
   const PB=['nenhuma','1 previsão','2 previsões','3 ou mais'],GB=['até 24 h','24 a 48 h','48 a 96 h','mais de 96 h'];
   const pv=grp(r=>PB[Math.min(3,r.np)]),gp=grp(r=>r.gap==null?null:GB[r.gap<=24?0:r.gap<=48?1:r.gap<=96?2:3]),rt=grp(r=>r.ret?'carro voltou em até 30 dias':'primeira OS no período');
@@ -781,16 +805,20 @@ function rAn(){const all=stats(F),m=new Map();for(const r of F){let a=m.get(r.an
   anRows=[...m.entries()].map(([an,L])=>{const s=stats(L),d=L.filter(r=>r.dur!=null);return {an,...s,dur:d.length?d.reduce((a,r)=>a+r.dur,0)/d.length:null,perd:all.n?s.D/all.n*100:0,pa:L.filter(r=>r.pa).length/L.length,sil:L.filter(r=>r.sil).length/L.length,ret:L.filter(r=>r.ret).length,risk:L.filter(r=>r.risk).length}}).sort((a,b)=>a.an.localeCompare(b.an,'pt-BR'));
   const sm=r=>r.n<MINR?'<span class="warn" title="Menos de 5 respostas: NPS individual ainda não confiável">*</span>':'';
   if(!vtAn)vtAn=VT($('vtAn'),[
-    {h:'Analista',v:r=>r.an},{h:'Enviadas',num:1,v:r=>r.env,f:cI},{h:'Respondidas',num:1,v:r=>r.n,f:cI},
-    {h:'Taxa de resposta',num:1,v:r=>r.tx,f:(v,r)=>`<span style="color:${v!=null&&v<.25?'var(--amber)':'inherit'}">${pc(v)}</span>`},
-    {h:'NPS',num:1,v:r=>r.nps,f:(v,r)=>r?`<b style="color:${r.n<MINR?'var(--muted)':npsCol(v)}">${f1(v)}</b>${sm(r)}`:''},
-    {h:'Promotores',num:1,v:r=>r.P,f:cI},{h:'Neutros',num:1,v:r=>r.N,f:v=>v?`<span class="warn">${v}</span>`:''},{h:'Detratores',num:1,v:r=>r.D,f:v=>v?`<b style="color:var(--red)">${v}</b>`:''},
+    {h:'Analista',v:r=>r.an,f:(v,r)=>r?lk(esc(v),{an:v},'Filtrar o painel por '+v):''},
+    {h:'Enviadas',num:1,v:r=>r.env,f:(v,r)=>r?lk(cI(v),{t:'ps',an:r.an,ps:'all'},'Ver as pesquisas enviadas'):''},
+    {h:'Respondidas',num:1,v:r=>r.n,f:(v,r)=>r&&v?lk(cI(v),{t:'ps',an:r.an,ps:'r'},'Ver as pesquisas respondidas'):cI(v)},
+    {h:'Taxa de resposta',num:1,v:r=>r.tx,f:(v,r)=>r?lk(`<span style="color:${v!=null&&v<.25?'var(--amber)':'inherit'}">${pc(v)}</span>`,{t:'ps',an:r.an,ps:'s'},'Ver as pesquisas sem resposta'):''},
+    {h:'NPS',num:1,v:r=>r.nps,f:(v,r)=>r?lk(`<b style="color:${r.n<MINR?'var(--muted)':npsCol(v)}">${f1(v)}</b>${sm(r)}`,{t:'ger',an:r.an},'Ver a visão geral de '+r.an):''},
+    {h:'Promotores',num:1,v:r=>r.P,f:(v,r)=>r&&v?lk(cI(v),{t:'cm',an:r.an,cm:'p'},'Ver os comentários dos promotores'):''},
+    {h:'Neutros',num:1,v:r=>r.N,f:(v,r)=>r&&v?lk(`<span class="warn">${v}</span>`,{t:'tr',an:r.an,tr:'n'},'Abrir a tratativa dos neutros'):''},
+    {h:'Detratores',num:1,v:r=>r.D,f:(v,r)=>r&&v?lk(`<b style="color:var(--red)">${v}</b>`,{t:'tr',an:r.an,tr:'d'},'Abrir a tratativa dos detratores'):''},
     {h:'Pontos perdidos no NPS geral',num:1,v:r=>r.perd,f:v=>v?'−'+f1(v):''},
     {h:'CSAT médio',num:1,v:r=>r.csat,f:v=>f1(v)},{h:'Duração média da OS (dias)',num:1,v:r=>r.dur,f:v=>f1(v)},{h:'Dias até responder',num:1,v:r=>r.lag,f:v=>f1(v)},
-    {h:'OS com prazo remarcado',num:1,v:r=>r.pa,f:v=>`<span style="color:${v>=.15?'var(--amber)':'inherit'}" title="OS em que o cliente recebeu 2 ou mais previsões de prazo">${pc(v)}</span>`},
-    {h:'OS com +48h sem atualização',num:1,v:r=>r.sil,f:v=>`<span style="color:${v>=.25?'var(--amber)':'inherit'}" title="OS que ficaram mais de 48 horas sem nenhum registro no histórico">${pc(v)}</span>`},
-    {h:'Retornos (≤30 dias)',num:1,v:r=>r.ret,f:v=>v?`<span class="warn">${v}</span>`:''}
-  ],()=>anRows,{key:'nps-an',colFilter:1,click:r=>{$('fAn').value=r.an;FL.an=r.an;refresh();toast('Filtro aplicado: <b>'+esc(r.an)+'</b>. Veja as outras abas.',4000)}});
+    {h:'OS com prazo remarcado',num:1,v:r=>r.pa,f:(v,r)=>r&&v?lk(`<span style="color:${v>=.15?'var(--amber)':'inherit'}">${pc(v)}</span>`,{t:'pz',an:r.an,pz:'pa'},'OS em que o cliente recebeu 2 ou mais previsões de prazo'):pc(v)},
+    {h:'OS com +48h sem atualização',num:1,v:r=>r.sil,f:(v,r)=>r&&v?lk(`<span style="color:${v>=.25?'var(--amber)':'inherit'}">${pc(v)}</span>`,{t:'pz',an:r.an,pz:'sil'},'OS que ficaram mais de 48 horas úteis sem registro'):pc(v)},
+    {h:'Retornos (≤30 dias)',num:1,v:r=>r.ret,f:(v,r)=>r&&v?lk(`<span class="warn">${v}</span>`,{t:'rt',an:r.an},'Ver os carros que voltaram'):''}
+  ],()=>anRows,{key:'nps-an2',colFilter:1});
   vtAn.refresh();fitVT('vtAn',anRows.length);$('cntAn').textContent=anRows.length+' analista(s) · NPS geral '+f1(all.nps)+' · clique num analista para filtrar o painel'}
 function fitVT(id,n){const el=$(id);el.style.height=Math.round(Math.min(innerHeight*.62,42+26*Math.max(1,n)+14))+'px'}
 
@@ -804,7 +832,7 @@ function rTr(){trRows=F.filter(r=>r.c&&(trMode==='dn'?r.c!=='P':r.c===trMode.toU
   $('trList').innerHTML=trRows.length?trRows.map(r=>{const lg=logOf(r.sol),w=wa(r.tel);return `<div class="trc ${r.c}">
     <div class="trh"><div class="trn"><span>NPS</span><b>${r.nps}</b></div><div class="trn"><span>CSAT</span><b>${r.csat??'—'}</b></div>
       <div class="tri"><div class="trt">${esc(r.cli||'(cliente não informado)')}</div><div class="trs">OS <b>${esc(r.os)}</b> · ${esc(r.placa)} · ${esc(r.tipo)} · ${esc(r.cid)}${r.uf&&r.uf!=='—'?'/'+esc(r.uf):''}</div>
-      <div class="trs">Analista <b>${esc(r.an)}</b> · enviada ${dStr(r.cr)} · respondida ${dStr(r.rd)}${r.can?' por '+esc(r.can):''}${r.dur!=null?' · OS durou '+f1(r.dur)+' dia(s)':''}</div></div>
+      <div class="trs">Analista <b>${lk(esc(r.an),{t:'an',an:r.an},'Filtrar por '+r.an)}</b> · enviada ${dStr(r.cr)} · respondida ${dStr(r.rd)}${r.can?' por '+esc(r.can):''}${r.dur!=null?' · OS durou '+f1(r.dur)+' dia(s)':''}</div></div>
       <div class="trk"><div class="trs">Contato: <b>${esc(r.rec||'—')}</b></div><div class="trs">${esc(r.tel)}${w?` · <a href="${w}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div><div class="trs">${r.mail?`<a href="mailto:${esc(r.mail)}">${esc(r.mail)}</a>`:''}</div></div></div>
     ${badges(r)}${r.msg?`<div class="trm">“${esc(r.msg)}”</div>`:'<div class="trm none">Sem comentário. Vale ligar para entender a nota.</div>'}
     ${lg.length?`<details><summary>Histórico da OS (${lg.length} registro${lg.length>1?'s':''})</summary><table class="lg">${lg.map(x=>`<tr><td>${esc(x.t)}</td><td>${esc(x.x)}</td><td>${esc(x.u)}</td></tr>`).join('')}</table></details>`:''}</div>`}).join(''):'<div class="bracket card note">Nenhum caso no filtro atual.</div>'}
@@ -817,7 +845,7 @@ function rRk(){const m=new Map();for(const r of F){const k=r.cli||'(sem cliente)
     const lv=rs.length?3:ds.length?2:ns.length>=2?1:0;return {k,L,s,why,lv,an:[...new Set(L.map(r=>r.an))].join(', '),pl:new Set(L.map(r=>r.placa)).size}}).filter(x=>x.lv>0).sort((a,b)=>b.lv-a.lv||a.s.nps-b.s.nps);
   $('cntRk').textContent=rkRows.length+' cliente(s) · '+rkRows.filter(x=>x.lv===3).length+' falando em sair';
   $('rkList').innerHTML=rkRows.length?rkRows.map(x=>{const ult=x.L.filter(r=>r.c).sort((a,b)=>b.rd-a.rd);const cm=x.L.filter(r=>r.msg&&r.c!=='P').sort((a,b)=>b.rd-a.rd)[0];
-    return `<div class="trc ${x.lv===3?'D':x.lv===2?'D':'N'}"><div class="trh"><div class="trn"><span>NPS</span><b>${f1(x.s.nps)}</b></div><div class="tri"><div class="trt">${esc(x.k)}${x.lv===3?' <span class="rk3">RISCO COMERCIAL</span>':''}</div>
+    return `<div class="trc ${x.lv===3?'D':x.lv===2?'D':'N'}"><div class="trh"><div class="trn"><span>NPS</span><b>${f1(x.s.nps)}</b></div><div class="tri"><div class="trt">${lk(esc(x.k),{t:'ps',q:x.k,ps:'all'},'Ver todas as pesquisas deste cliente')}${x.lv===3?' <span class="rk3">RISCO COMERCIAL</span>':''}</div>
       <div class="trs">${esc(x.why.join(' · '))}</div><div class="trs">${x.s.env} pesquisa(s) · ${x.s.n} resposta(s) · ${x.pl} placa(s) · analista(s): <b>${esc(x.an)}</b></div>
       <div class="trs">Notas: ${ult.map(r=>`<b style="color:${r.c==='P'?'var(--green)':r.c==='N'?'var(--amber)':'var(--red)'}">${r.nps}</b> <span title="OS ${esc(r.os)}">(${dStr(r.rd).slice(0,5)})</span>`).join(' · ')}</div></div></div>
       ${cm?`<div class="trm">“${esc(cm.msg.length>420?cm.msg.slice(0,420)+'…':cm.msg)}”</div>`:''}</div>`}).join(''):'<div class="bracket card note">Nenhum cliente em risco no filtro atual.</div>'}
@@ -865,15 +893,18 @@ function rSr(){const g=(f)=>{const m=new Map();for(const r of F){const k=f(r);if
   ctRows=[...g(r=>r.ctk)].map(([k,L])=>{const s=stats(L);return {k,rec:L[0].rec,cli:L[0].cli,...s}}).sort((a,b)=>b.env-a.env);
   const nz=srRows.filter(r=>!r.n),s=stats(F),c4=ctRows.filter(r=>r.env>4),c4s=stats(F.filter(r=>c4.some(c=>c.k===r.ctk)));
   $('srK').innerHTML=kpi('Sem resposta',fmtI.format(s.env-s.n),'de '+fmtI.format(s.env)+' pesquisas enviadas','var(--amber)')+kpi('Clientes que nunca responderam',fmtI.format(nz.length),'de '+fmtI.format(srRows.length)+' clientes · '+fmtI.format(nz.reduce((a,r)=>a+r.env,0))+' pesquisas')+kpi('Contatos com mais de 4 pesquisas',fmtI.format(c4.length),c4.length?'taxa de resposta deles: '+pc(c4s.tx):'');
-  if(!vtSr)vtSr=VT($('vtSr'),[{h:'Cliente',v:r=>r.k},{h:'Enviadas',num:1,v:r=>r.env,f:cI},{h:'Respondidas',num:1,v:r=>r.n,f:v=>v?cI(v):'<span style="color:var(--red)">0</span>'},{h:'Taxa',num:1,v:r=>r.tx,f:pc},{h:'NPS',num:1,v:r=>r.nps,f:(v,r)=>r&&r.n?`<span style="color:${npsCol(v)}">${f1(v)}</span>`:''},{h:'Última pesquisa',date:1,v:r=>r.ult,f:cD},{h:'UF',v:r=>r.uf},{h:'Analistas',v:r=>r.an}],()=>srRows,{key:'nps-sr',colFilter:1});
+  if(!vtSr)vtSr=VT($('vtSr'),[{h:'Cliente',v:r=>r.k,f:(v,r)=>r?lk(esc(v),{t:'ps',q:v,ps:'all'},'Ver as pesquisas deste cliente'):''},{h:'Enviadas',num:1,v:r=>r.env,f:cI},{h:'Respondidas',num:1,v:r=>r.n,f:v=>v?cI(v):'<span style="color:var(--red)">0</span>'},{h:'Taxa',num:1,v:r=>r.tx,f:pc},{h:'NPS',num:1,v:r=>r.nps,f:(v,r)=>r&&r.n?`<span style="color:${npsCol(v)}">${f1(v)}</span>`:''},{h:'Última pesquisa',date:1,v:r=>r.ult,f:cD},{h:'UF',v:r=>r.uf},{h:'Analistas',v:r=>r.an}],()=>srRows,{key:'nps-sr',colFilter:1});
   if(!vtCt)vtCt=VT($('vtCt'),[{h:'Contato',v:r=>r.rec},{h:'E-mail / telefone',v:r=>r.k},{h:'Cliente',v:r=>r.cli},{h:'Pesquisas recebidas',num:1,v:r=>r.env,f:(v)=>`<span style="color:${v>4?'var(--amber)':'inherit'}">${v}</span>`},{h:'Respondidas',num:1,v:r=>r.n,f:cI},{h:'Taxa',num:1,v:r=>r.tx,f:pc}],()=>ctRows,{key:'nps-ct',colFilter:1});
   vtSr.refresh();vtCt.refresh();$('vtSr').style.height=$('vtCt').style.height='46vh';$('cntSr').textContent=srRows.length+' cliente(s)';$('cntCt').textContent=ctRows.length+' contato(s)'}
 
 // ================= pesquisas =================
 let vtPs=null,psSel=null;
+let psMode='all';
+$('psSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;psMode=b.dataset.v;segSet('psSeg',psMode);dirty.ps=true;render()};
+const psRows=()=>psMode==='r'?F.filter(r=>r.nps!=null):psMode==='s'?F.filter(r=>r.nps==null):F;
 function rPs(){if(!vtPs)vtPs=VT($('vtPs'),[{h:'Enviada',date:1,v:r=>r.cr,f:cD},{h:'OS',v:r=>r.os},{h:'Placa',v:r=>r.placa},{h:'Cliente',v:r=>r.cli},{h:'Analista',v:r=>r.an},{h:'Tipo',v:r=>r.tipo},{h:'Cidade',v:r=>r.cid},{h:'UF',v:r=>r.uf},
     {h:'Respondida',date:1,v:r=>r.rd,f:cD},{h:'NPS',num:1,v:r=>r.nps,f:(v,r)=>r&&v!=null?pill(r):''},{h:'CSAT',num:1,v:r=>r.csat,f:cI},{h:'Canal',v:r=>r.can},{h:'Duração OS (dias)',num:1,v:r=>r.dur,f:v=>f1(v)},{h:'Comentário',v:r=>r.msg,title:1},{h:'Contato',v:r=>r.rec},{h:'Telefone',v:r=>r.tel},{h:'E-mail',v:r=>r.mail}],
-    ()=>F,{key:'nps-ps',colFilter:1,click:r=>{psSel=r;vtPs.draw();psDet()},sel:r=>r===psSel,onFilter:n=>$('cntPs').textContent=fmtI.format(n)+' pesquisa(s)'});
+    ()=>psRows(),{key:'nps-ps',colFilter:1,click:r=>{psSel=r;vtPs.draw();psDet()},sel:r=>r===psSel,onFilter:n=>$('cntPs').textContent=fmtI.format(n)+' pesquisa(s)'});
   vtPs.refresh();$('cntPs').textContent=fmtI.format(vtPs.count())+' pesquisa(s)';psDet()}
 function psDet(){const r=psSel,el=$('psDet');if(!r||!F.includes(r)){el.innerHTML='';return}const lg=logOf(r.sol);
   el.innerHTML=`<div class="bracket card" style="margin-top:10px"><h3>OS ${esc(r.os)} · ${esc(r.placa)} · ${esc(r.cli)}</h3><p class="d">Analista ${esc(r.an)} · ${esc(r.tipo)} · NPS ${r.nps??'sem resposta'}${r.msg?' · “'+esc(r.msg)+'”':''}</p>${lg.length?`<table class="lg">${lg.map(x=>`<tr><td>${esc(x.t)}</td><td>${esc(x.x)}</td><td>${esc(x.u)}</td></tr>`).join('')}</table>`:'<div class="note">Sem histórico.</div>'}</div>`}
