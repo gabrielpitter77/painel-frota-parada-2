@@ -318,17 +318,16 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
 <body>
 <div id="tip"></div><div id="toast"></div>
 <div id="overlay" class="hide"><div class="brand">LOC <b>FROTAS</b></div><div class="bar"><i></i></div><div id="ovMsg">Carregando…</div></div>
-<div id="login" class="chk"><form id="lgForm" class="bracket" autocomplete="on"><div class="brand">LOC <b>FROTAS</b></div><div class="lt" id="lgT">Indicadores NPS · Manutenção</div><label>Usuário<input id="lgU" autocomplete="username" spellcheck="false"></label><label>Senha<input id="lgP" type="password" autocomplete="current-password"></label><label id="lgP2w" style="display:none">Confirmar senha<input id="lgP2" type="password" autocomplete="new-password"></label><label class="lgRem"><input type="checkbox" id="lgRem" checked>Lembrar neste computador</label><button class="btn amber" id="lgBtn" type="submit">Entrar</button><div id="lgErr"></div><div class="note" id="lgNote">Acesso restrito a líderes e gerência. Os dados são criptografados e só abrem com o usuário e a senha corretos.</div></form></div>
 <header>
   <div class="brand">LOC <b>FROTAS</b></div>
   <h1>Indicadores NPS · Pesquisa de Manutenção</h1>
-  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><button class="btn amber" id="btnLoad" title="Carregar o Excel exportado da pesquisa (report_webli…xlsx)">Carregar relatório</button><button class="btn amber" id="btnPub" style="display:none">Gerar nps-base.enc</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden><button class="btn" id="btnOut" title="Sair e esquecer o login neste computador">Sair</button><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a></div>
+  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><button class="btn amber" id="btnLoad" title="Carregar o Excel exportado da pesquisa (report_webli…xlsx)">Carregar relatório</button><button class="btn amber" id="btnPub" style="display:none">Gerar base para publicar</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a></div>
 </header>
 <div id="localBadge"><span id="lbTxt"></span></div>
 <main>
   <div id="empty" class="bracket emptyb" style="display:none">
     <h2>Nenhuma pesquisa na base ainda</h2>
-    <p>Clique em <b>Carregar relatório</b> e escolha o Excel exportado da plataforma de pesquisa (report_webli…xlsx). Depois clique em <b>Gerar nps-base.enc</b> e suba o arquivo no GitHub.</p>
+    <p>Clique em <b>Carregar relatório</b> e escolha o Excel exportado da plataforma de pesquisa (report_webli…xlsx). Depois clique em <b>Gerar base para publicar</b> e suba o arquivo nps-base.json.gz no GitHub.</p>
     <div id="drop" class="dropz">Solte o arquivo .xlsx aqui</div>
   </div>
   <div id="app" style="display:none">
@@ -594,41 +593,15 @@ const pc=v=>v==null||!isFinite(v)?'—':(v*100).toFixed(1).replace('.',',')+'%';
 const nrm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const nameFix=s=>{s=String(s??'').replace(/\s+/g,' ').trim();if(!s)return '';return s.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g,w=>w.toLowerCase())};
 
-// ================= criptografia / login =================
-let KEY=null,SALT=null,PAY=null,DB=null,DIRTY=false;
-const normU=u=>u.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-async function deriveKey(u,pw,salt){const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(normU(u)+'\u0000'+pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-const payP=fetch('nps-base.enc?v='+Date.now(),{cache:'no-store'}).then(r=>{if(r.status===404)return null;if(!r.ok)throw new Error('nps-base.enc indisponível ('+r.status+')');return r.arrayBuffer()}).then(ab=>{if(!ab)return null;const b=new Uint8Array(ab);if(b.length<40)throw new Error('nps-base.enc inválido');PAY={salt:b.slice(0,16),iv:b.slice(16,28),ct:b.slice(28)};return PAY});
-payP.catch(()=>{});
-async function openPay(k){const raw=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:PAY.iv},k,PAY.ct));return JSON.parse(new TextDecoder().decode(await gunzip(raw)))}
-let SETUP=false;
-function lgShow(msg){const l=$('login');if(!l)return;l.classList.remove('chk');if(msg)$('lgErr').textContent=msg;setTimeout(()=>$('lgU').focus(),30)}
-$('lgForm').onsubmit=async e=>{e.preventDefault();const u=$('lgU').value,pw=$('lgP').value,b=$('lgBtn'),er=$('lgErr');
-  if(!u||!pw){er.textContent='Informe usuário e senha.';return}
-  if(!window.crypto||!crypto.subtle){er.textContent='Este navegador não suporta a criptografia necessária. Use Chrome ou Edge atualizados.';return}
-  if(SETUP){if(pw.length<8){er.textContent='Use uma senha com pelo menos 8 caracteres.';return}if(pw!==$('lgP2').value){er.textContent='As senhas não conferem.';return}
-    b.disabled=true;b.textContent='Criando…';SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await deriveKey(u,pw,SALT);if($('lgRem').checked)await IDB.set('lkey',{k:KEY,s:SALT});
-    DB={v:1,rows:[],files:[]};start();return}
-  b.disabled=true;b.textContent='Verificando…';er.textContent='';
-  try{await payP}catch(err){b.disabled=false;b.textContent='Entrar';er.textContent='Não foi possível baixar a base: '+err.message;return}
-  try{const k=await deriveKey(u,pw,PAY.salt);DB=await openPay(k);KEY=k;SALT=PAY.salt}
-  catch(err){b.disabled=false;b.textContent='Entrar';er.textContent='Usuário ou senha inválidos.';$('lgP').value='';$('lgP').focus();return}
-  if($('lgRem').checked)await IDB.set('lkey',{k:KEY,s:SALT});else IDB.del('lkey');
-  start()};
-$('btnOut').onclick=async()=>{await IDB.del('lkey');location.reload()};
-(async()=>{let P=null;try{P=await payP}catch(e){lgShow('Não foi possível baixar a base: '+e.message);return}
-  if(!P){if(IS_ADM){SETUP=true;$('lgT').textContent='Primeira publicação · defina o acesso';$('lgP2w').style.display='';$('lgBtn').textContent='Criar acesso';$('lgP').autocomplete='new-password';
-      $('lgNote').innerHTML='Ainda não existe <b>nps-base.enc</b> no repositório. Defina o usuário e a senha que líderes e gerência vão usar. A senha não fica salva em lugar nenhum: guarde-a.';lgShow()}
-    else{const l=$('login');l.classList.remove('chk');$('lgForm').innerHTML='<div class="brand">LOC <b>FROTAS</b></div><div class="lt">Indicadores NPS</div><p class="note">A base ainda não foi publicada. Avise o administrador do painel.</p>'}return}
-  let s=null;try{s=await IDB.get('lkey')}catch(e){}
-  if(s&&s.k&&s.s&&s.s.length===16&&s.s.every((x,i)=>x===P.salt[i])){try{DB=await openPay(s.k);KEY=s.k;SALT=P.salt;start();return}catch(e){IDB.del('lkey')}}
-  lgShow()})();
-async function saveLocal(){try{const gz=await gzip(new TextEncoder().encode(JSON.stringify(DB)));const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,gz));await IDB.set('localdb',{gen:DB.gen,iv,ct,salt:SALT})}catch(e){}}
-async function useLocal(){try{const L=await IDB.get('localdb');if(!L||!L.salt||L.salt.length!==SALT.length||!L.salt.every((x,i)=>x===SALT[i]))return false;if(DB&&DB.gen&&L.gen<=DB.gen){IDB.del('localdb');return false}
-  const raw=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:L.iv},KEY,L.ct));DB=JSON.parse(new TextDecoder().decode(await gunzip(raw)));return true}catch(e){return false}}
+// ================= base aberta (sem login): nps-base.json.gz =================
+let DB=null,DIRTY=false;
+const BASEF='nps-base.json.gz';
+async function saveLocal(){try{await IDB.set('localdb2',{gen:DB.gen,gz:await gzip(new TextEncoder().encode(JSON.stringify(DB)))})}catch(e){}}
+async function useLocal(){try{const L=await IDB.get('localdb2');if(!L||!L.gz)return false;if(DB&&DB.gen&&L.gen<=DB.gen){IDB.del('localdb2');return false}DB=JSON.parse(new TextDecoder().decode(await gunzip(L.gz)));return true}catch(e){return false}}
 function badge(){const lb=$('localBadge');if(!DIRTY){lb.style.display='none';$('btnPub').style.display='none';return}
-  $('btnPub').style.display='';lb.style.display='flex';$('lbTxt').innerHTML='<b>Base carregada só neste computador.</b> Para todos verem os números novos: clique em <b>Gerar nps-base.enc</b> e suba o arquivo no GitHub (repositório painel-frota-parada-2 → Add file → Upload files → Commit changes).'}
-async function start(){const l=$('login');if(l)l.remove();if(await useLocal())DIRTY=true;badge();if(!DB.rows||!DB.rows.length){$('empty').style.display='';$('app').style.display='none'}else boot()}
+  $('btnPub').style.display='';lb.style.display='flex';$('lbTxt').innerHTML='<b>Base carregada só neste computador.</b> Para todos verem os números novos: clique em <b>Gerar base para publicar</b> e suba o <b>'+BASEF+'</b> no GitHub (repositório painel-frota-parada-2 → Add file → Upload files → Commit changes).'}
+async function start(){if(await useLocal())DIRTY=true;badge();if(!DB||!DB.rows||!DB.rows.length){DB=DB||{v:1,rows:[],files:[]};$('empty').style.display='';$('app').style.display='none'}else boot()}
+(async()=>{overlay('Carregando base…');try{const r=await fetch(BASEF+'?v='+Date.now(),{cache:'no-store'});if(r.ok)DB=JSON.parse(new TextDecoder().decode(await gunzip(new Uint8Array(await r.arrayBuffer()))));else DB={v:1,rows:[],files:[]}}catch(e){DB={v:1,rows:[],files:[]}}overlayOff();start()})();
 
 // ================= leitura do relatório (Excel da plataforma de pesquisa) =================
 const COLS={id:'ID ENVIO',pesq:'PESQUISA',cli:'CLIENTE',doc:'DOCUMENTO',rec:'RECEBEDOR',tel:'TELEFONE DE ENVIO',mail:'EMAIL DE ENVIO',can:'CANAL DE RESPOSTA',crd:'CRIADO EM DATA',crh:'CRIADO EM HORÁRIO',wpp:'ENVIADO VIA WPP EM',eml:'ENVIADO VIA EMAIL EM',rd:'RESPONDIDA EM DATA',rh:'RESPONDIDA EM HORÁRIO',msg:'MENSAGEM',nps:'NOTA NPS',csat:'NOTA CSAT',tipo:'TAG_TIPO_MANUTENCAO',placa:'TAG_LICENSE_PLATE',an:'TAG_CONSULTANT',cid:'TAG_CITY',uf:'TAG_STATE',os:'TAG_OSCODE',sol:'TAG_SOLUTION',ccid:'CIDADE',cuf:'ESTADO'};
@@ -647,25 +620,23 @@ function parseSheet(ab){
       tipo:String(g(r,'tipo')||'').trim(),placa:String(g(r,'placa')||'').trim().toUpperCase(),an:nameFix(g(r,'an')),cid:nameFix(g(r,'cid')||g(r,'ccid')),uf:String(g(r,'uf')||g(r,'cuf')||'').trim().toUpperCase(),sol})}
   return {rows:out,fora}}
 async function loadFile(f){
-  if(!KEY){toast('Faça login primeiro.');return}
   overlay('Lendo '+esc(f.name)+'…');
   try{const P=parseSheet(await f.arrayBuffer());if(!P.rows.length)throw new Error('Nenhuma pesquisa de manutenção encontrada no arquivo.');
     const M=new Map((DB.rows||[]).map(r=>[r.id,r]));let nov=0,upd=0;for(const r of P.rows){if(M.has(r.id))upd++;else nov++;M.set(r.id,r)}
     DB.rows=[...M.values()].sort((a,b)=>(a.cr-b.cr)||(+a.id- +b.id));(DB.files=DB.files||[]).push({name:f.name,at:Date.now(),n:P.rows.length});DB.gen=Date.now();DIRTY=true;await saveLocal();
     overlayOff();badge();boot();
-    toast(`<b style="color:var(--green)">${fmtI.format(P.rows.length)} pesquisas de manutenção lidas</b><br>${fmtI.format(nov)} novas · ${fmtI.format(upd)} atualizadas · ${fmtI.format(P.fora)} de mobilização/desmobilização/devolução ignoradas.<br>Agora clique em <b>Gerar nps-base.enc</b> e suba no GitHub.`,15000)}
+    toast(`<b style="color:var(--green)">${fmtI.format(P.rows.length)} pesquisas de manutenção lidas</b><br>${fmtI.format(nov)} novas · ${fmtI.format(upd)} atualizadas · ${fmtI.format(P.fora)} de mobilização/desmobilização/devolução ignoradas.<br>Agora clique em <b>Gerar base para publicar</b> e suba no GitHub.`,15000)}
   catch(e){overlay('Erro ao ler: '+esc(e.message||e),true)}}
 $('btnLoad').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)loadFile(f)};
 $('drop').onclick=()=>$('fileIn').click();
-addEventListener('dragover',e=>{if(!KEY)return;e.preventDefault();document.body.classList.add('drag')});
+addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drag')});
 addEventListener('dragleave',e=>{if(e.target===document.documentElement||!e.relatedTarget)document.body.classList.remove('drag')});
-addEventListener('drop',e=>{if(!KEY)return;e.preventDefault();document.body.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadFile(f)});
-$('btnPub').onclick=async()=>{if(!KEY||!DB)return;const b=$('btnPub');b.disabled=true;b.textContent='Gerando…';
-  try{const gz=await gzip(new TextEncoder().encode(JSON.stringify(DB)));const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,gz));
-    const out=new Uint8Array(28+ct.length);out.set(SALT,0);out.set(iv,16);out.set(ct,28);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'application/octet-stream'}));a.download='nps-base.enc';a.click();
-    toast('<b style="color:var(--green)">nps-base.enc gerado</b><br>No GitHub: repositório painel-frota-parada-2 → Add file → Upload files → arraste o nps-base.enc (substitui o antigo) → Commit changes.',20000)}
-  catch(e){toast('Erro ao gerar: '+esc(e.message||e),8000)}b.disabled=false;b.textContent='Gerar nps-base.enc'};
+addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+$('btnPub').onclick=async()=>{if(!DB)return;const b=$('btnPub');b.disabled=true;b.textContent='Gerando…';
+  try{const gz=await gzip(new TextEncoder().encode(JSON.stringify(DB)));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([gz],{type:'application/gzip'}));a.download=BASEF;a.click();
+    toast('<b style="color:var(--green)">'+BASEF+' gerado</b><br>No GitHub: repositório painel-frota-parada-2 → Add file → Upload files → arraste o '+BASEF+' (substitui o antigo) → Commit changes.',20000)}
+  catch(e){toast('Erro ao gerar: '+esc(e.message||e),8000)}b.disabled=false;b.textContent='Gerar base para publicar'};
 
 
 // ================= modelo =================
