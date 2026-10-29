@@ -305,6 +305,7 @@ table.ct tr.tot td{border-top:1px solid var(--line);color:var(--text);font-weigh
 .bds{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bd{font-style:normal;font-family:var(--mono);font-size:11px;padding:2px 8px;border:1px solid var(--amber);color:var(--amber)}.bd.r{border-color:var(--red);color:var(--red);font-weight:600}
 .rk3{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#fff;background:var(--red);padding:2px 7px;margin-left:8px;vertical-align:middle}
 table.lg tr.pv td{color:var(--amber)}
+#localBadge{display:none;gap:10px;align-items:center;background:rgba(245,166,35,.15);border-bottom:1px solid var(--amber);color:var(--amber);font-family:var(--mono);font-size:12px;padding:8px 24px;line-height:1.5}#localBadge b{color:var(--text)}
 footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;padding:18px 16px 24px}
 @media (max-width:700px){main{padding:10px 12px 0}header{padding:12px}.filters .wide{grid-column:auto}}
 </style>
@@ -317,8 +318,9 @@ footer{text-align:center;font-family:var(--mono);font-size:11px;color:#8a93a6;pa
 <header>
   <div class="brand">LOC <b>FROTAS</b></div>
   <h1>Indicadores NPS · Pesquisa de Manutenção</h1>
-  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><button class="btn amber adm" id="btnLoad">Carregar relatório</button><button class="btn amber adm" id="btnPub" style="display:none">Gerar nps-base.enc</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden><button class="btn" id="btnOut" title="Sair e esquecer o login neste computador">Sair</button><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a></div>
+  <div class="src"><button type="button" class="themesw" id="btnTheme" role="switch" aria-checked="false" aria-label="Tema claro ou escuro"><span class="ts-knob"><span class="ts-i ts-sun"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-i ts-moon"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></span><span class="ts-bg ts-bgsun"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></g></svg></span><span class="ts-bg ts-bgmoon"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z" fill="currentColor"/></svg></span></button><button class="btn amber" id="btnLoad" title="Carregar o Excel exportado da pesquisa (report_webli…xlsx)">Carregar relatório</button><button class="btn amber" id="btnPub" style="display:none">Gerar nps-base.enc</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden><button class="btn" id="btnOut" title="Sair e esquecer o login neste computador">Sair</button><a class="btn" href="https://gabrielpitter77.github.io/painel-frota-parada-2/" style="text-decoration:none;display:inline-flex;align-items:center">← Central</a></div>
 </header>
+<div id="localBadge"><span id="lbTxt"></span></div>
 <main>
   <div id="empty" class="bracket emptyb" style="display:none">
     <h2>Nenhuma pesquisa na base ainda</h2>
@@ -616,7 +618,12 @@ $('btnOut').onclick=async()=>{await IDB.del('lkey');location.reload()};
   let s=null;try{s=await IDB.get('lkey')}catch(e){}
   if(s&&s.k&&s.s&&s.s.length===16&&s.s.every((x,i)=>x===P.salt[i])){try{DB=await openPay(s.k);KEY=s.k;SALT=P.salt;start();return}catch(e){IDB.del('lkey')}}
   lgShow()})();
-function start(){const l=$('login');if(l)l.remove();if(!DB.rows||!DB.rows.length){$('empty').style.display='';$('app').style.display='none'}else boot()}
+async function saveLocal(){try{const gz=await gzip(new TextEncoder().encode(JSON.stringify(DB)));const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,gz));await IDB.set('localdb',{gen:DB.gen,iv,ct,salt:SALT})}catch(e){}}
+async function useLocal(){try{const L=await IDB.get('localdb');if(!L||!L.salt||L.salt.length!==SALT.length||!L.salt.every((x,i)=>x===SALT[i]))return false;if(DB&&DB.gen&&L.gen<=DB.gen){IDB.del('localdb');return false}
+  const raw=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:L.iv},KEY,L.ct));DB=JSON.parse(new TextDecoder().decode(await gunzip(raw)));return true}catch(e){return false}}
+function badge(){const lb=$('localBadge');if(!DIRTY){lb.style.display='none';$('btnPub').style.display='none';return}
+  $('btnPub').style.display='';lb.style.display='flex';$('lbTxt').innerHTML='<b>Base carregada só neste computador.</b> Para todos verem os números novos: clique em <b>Gerar nps-base.enc</b> e suba o arquivo no GitHub (repositório painel-frota-parada-2 → Add file → Upload files → Commit changes).'}
+async function start(){const l=$('login');if(l)l.remove();if(await useLocal())DIRTY=true;badge();if(!DB.rows||!DB.rows.length){$('empty').style.display='';$('app').style.display='none'}else boot()}
 
 // ================= leitura do relatório (Excel da plataforma de pesquisa) =================
 const COLS={id:'ID ENVIO',pesq:'PESQUISA',cli:'CLIENTE',doc:'DOCUMENTO',rec:'RECEBEDOR',tel:'TELEFONE DE ENVIO',mail:'EMAIL DE ENVIO',can:'CANAL DE RESPOSTA',crd:'CRIADO EM DATA',crh:'CRIADO EM HORÁRIO',wpp:'ENVIADO VIA WPP EM',eml:'ENVIADO VIA EMAIL EM',rd:'RESPONDIDA EM DATA',rh:'RESPONDIDA EM HORÁRIO',msg:'MENSAGEM',nps:'NOTA NPS',csat:'NOTA CSAT',tipo:'TAG_TIPO_MANUTENCAO',placa:'TAG_LICENSE_PLATE',an:'TAG_CONSULTANT',cid:'TAG_CITY',uf:'TAG_STATE',os:'TAG_OSCODE',sol:'TAG_SOLUTION',ccid:'CIDADE',cuf:'ESTADO'};
@@ -639,22 +646,22 @@ async function loadFile(f){
   overlay('Lendo '+esc(f.name)+'…');
   try{const P=parseSheet(await f.arrayBuffer());if(!P.rows.length)throw new Error('Nenhuma pesquisa de manutenção encontrada no arquivo.');
     const M=new Map((DB.rows||[]).map(r=>[r.id,r]));let nov=0,upd=0;for(const r of P.rows){if(M.has(r.id))upd++;else nov++;M.set(r.id,r)}
-    DB.rows=[...M.values()].sort((a,b)=>(a.cr-b.cr)||(+a.id- +b.id));(DB.files=DB.files||[]).push({name:f.name,at:Date.now(),n:P.rows.length});DB.gen=Date.now();DIRTY=true;
-    overlayOff();$('btnPub').style.display='';boot();
+    DB.rows=[...M.values()].sort((a,b)=>(a.cr-b.cr)||(+a.id- +b.id));(DB.files=DB.files||[]).push({name:f.name,at:Date.now(),n:P.rows.length});DB.gen=Date.now();DIRTY=true;await saveLocal();
+    overlayOff();badge();boot();
     toast(`<b style="color:var(--green)">${fmtI.format(P.rows.length)} pesquisas de manutenção lidas</b><br>${fmtI.format(nov)} novas · ${fmtI.format(upd)} atualizadas · ${fmtI.format(P.fora)} de mobilização/desmobilização/devolução ignoradas.<br>Agora clique em <b>Gerar nps-base.enc</b> e suba no GitHub.`,15000)}
   catch(e){overlay('Erro ao ler: '+esc(e.message||e),true)}}
 $('btnLoad').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)loadFile(f)};
 $('drop').onclick=()=>$('fileIn').click();
-addEventListener('dragover',e=>{if(!IS_ADM||!KEY)return;e.preventDefault();document.body.classList.add('drag')});
+addEventListener('dragover',e=>{if(!KEY)return;e.preventDefault();document.body.classList.add('drag')});
 addEventListener('dragleave',e=>{if(e.target===document.documentElement||!e.relatedTarget)document.body.classList.remove('drag')});
-addEventListener('drop',e=>{if(!IS_ADM||!KEY)return;e.preventDefault();document.body.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+addEventListener('drop',e=>{if(!KEY)return;e.preventDefault();document.body.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadFile(f)});
 $('btnPub').onclick=async()=>{if(!KEY||!DB)return;const b=$('btnPub');b.disabled=true;b.textContent='Gerando…';
   try{const gz=await gzip(new TextEncoder().encode(JSON.stringify(DB)));const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,gz));
-    const out=new Uint8Array(28+ct.length);out.set(SALT,0);out.set(iv,16);out.set(ct,28);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'application/octet-stream'}));a.download='nps-base.enc';a.click();DIRTY=false;
+    const out=new Uint8Array(28+ct.length);out.set(SALT,0);out.set(iv,16);out.set(ct,28);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'application/octet-stream'}));a.download='nps-base.enc';a.click();
     toast('<b style="color:var(--green)">nps-base.enc gerado</b><br>No GitHub: repositório painel-frota-parada-2 → Add file → Upload files → arraste o nps-base.enc (substitui o antigo) → Commit changes.',20000)}
   catch(e){toast('Erro ao gerar: '+esc(e.message||e),8000)}b.disabled=false;b.textContent='Gerar nps-base.enc'};
-addEventListener('beforeunload',e=>{if(DIRTY){e.preventDefault();e.returnValue=''}});
+
 
 // ================= modelo =================
 let R=[];// linhas enriquecidas
